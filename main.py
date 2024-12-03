@@ -18,6 +18,8 @@ import asyncio
 
 import requests
 
+from BattleLogic import *
+
 no_battle_counter = 0
 # Replace with your Discord webhook URL
 WEBHOOK_URL = "https://discord.com/api/webhooks/1313072656311910431/bA2WxdlWoZnQnkSyqEhK6e6PVU17GF_GuGbjL32fiI6JknEL_cJEe190FU4jV5X7bSTx"
@@ -326,6 +328,7 @@ def train_check(app_window):
     # print(M2T)
     # print(M3T)
     # print(M4T)
+    timeDelay = 1.5
 
     if 'ready' in M1T.lower():
         miscrit_levels["1"] += 1
@@ -333,17 +336,17 @@ def train_check(app_window):
         #send_discord_webhook(f"Miscrit 1 Leveled Up: {temp}")
 
         click_on(app_window,click_coord['miscrit1Train'])
-        time.sleep(1)
+        time.sleep(timeDelay)
         click_on(app_window,click_coord['trainMiscrit'])
-        time.sleep(1)
+        time.sleep(timeDelay)
         click_on(app_window,click_coord['closeTrainMiscrit'])
-        time.sleep(1)
+        time.sleep(timeDelay)
         click_on(app_window,click_coord['closeNewMoveMiscrit'])
-        time.sleep(1)
+        time.sleep(timeDelay)
         click_on(app_window,click_coord['evolSkip1'])
-        time.sleep(1)
+        time.sleep(timeDelay)
         click_on(app_window,click_coord['evolSkip2'])
-        time.sleep(1)
+        time.sleep(timeDelay)
         
 
     if 'ready' in M2T.lower():
@@ -352,17 +355,17 @@ def train_check(app_window):
         #send_discord_webhook(f"Miscrit 2 Leveled Up: {temp}")
 
         click_on(app_window,click_coord['miscrit2Train'])
-        time.sleep(1)
+        time.sleep(1.5)
         click_on(app_window,click_coord['trainMiscrit'])
-        time.sleep(1)
+        time.sleep(timeDelay)
         click_on(app_window,click_coord['closeTrainMiscrit'])
-        time.sleep(1)
+        time.sleep(timeDelay)
         click_on(app_window,click_coord['closeNewMoveMiscrit'])
-        time.sleep(1)
+        time.sleep(timeDelay)
         click_on(app_window,click_coord['evolSkip1'])
-        time.sleep(1)
+        time.sleep(timeDelay)
         click_on(app_window,click_coord['evolSkip2'])
-        time.sleep(1)
+        time.sleep(timeDelay)
 
     if 'ready' in M3T.lower():
         miscrit_levels["3"] += 1
@@ -370,17 +373,17 @@ def train_check(app_window):
         #send_discord_webhook(f"Miscrit 3 Leveled Up: {temp}")
 
         click_on(app_window,click_coord['miscrit3Train'])
-        time.sleep(1)
+        time.sleep(timeDelay)
         click_on(app_window,click_coord['trainMiscrit'])
-        time.sleep(1)
+        time.sleep(timeDelay)
         click_on(app_window,click_coord['closeTrainMiscrit'])
-        time.sleep(1)
+        time.sleep(timeDelay)
         click_on(app_window,click_coord['closeNewMoveMiscrit'])
-        time.sleep(1)
+        time.sleep(timeDelay)
         click_on(app_window,click_coord['evolSkip1'])
-        time.sleep(1)
+        time.sleep(timeDelay)
         click_on(app_window,click_coord['evolSkip2'])
-        time.sleep(1)
+        time.sleep(timeDelay)
 
     if 'ready' in M4T.lower():
         miscrit_levels["4"] += 1
@@ -388,17 +391,17 @@ def train_check(app_window):
         #send_discord_webhook(f"Miscrit 4 Leveled Up: {temp}")
 
         click_on(app_window,click_coord['miscrit4Train'])
-        time.sleep(1)
+        time.sleep(timeDelay)
         click_on(app_window,click_coord['trainMiscrit'])
-        time.sleep(1)
+        time.sleep(timeDelay)
         click_on(app_window,click_coord['closeTrainMiscrit'])
-        time.sleep(1)
+        time.sleep(timeDelay)
         click_on(app_window,click_coord['closeNewMoveMiscrit'])
-        time.sleep(1)
+        time.sleep(timeDelay)
         click_on(app_window,click_coord['evolSkip1'])
-        time.sleep(1)
+        time.sleep(timeDelay)
         click_on(app_window,click_coord['evolSkip2'])
-        time.sleep(1)
+        time.sleep(timeDelay)
     
     click_on(app_window,click_coord['closeTrainMenu'])
     print('Train Check Ends ########################################')
@@ -412,97 +415,7 @@ def logout(app_window):
     click_on(app_window,click_coord['login'])
     time.sleep(7)
 
-def battle(app_window,battle_found_event,threshold=60):
-    global no_battle_counter
-
-    if no_battle_counter >= 5:
-        send_discord_webhook(f"Program Stuck.")
-
-    if battle_found_event.is_set():
-        no_battle_counter = 0
-        #click_on(app_window,click_coord['attackRightTab'])
-
-        print("Battle Started")
-        process_data = read_from_file('Temp.json')
-        capture = process_data.get("capture","Don't Know")
-
-        commonAreaPokemon = ['Lumera','Snatcher','Hotfoot','Nessy >','Elefauma','Flameling \u2014','our >']
-        #commonAreaPokemon = []
-
-        right_pokemon = process_data.get("right_pokemon_name","Unkown")
-        if right_pokemon not in commonAreaPokemon:
-            send_discord_webhook(f"Rare Miscrit Found: {right_pokemon}")
-            time.sleep(600)
-
-        capturedOnce = 1 # 0
-
-        while 'capture' in capture.lower() or 'cet' in capture.lower() or 'ya' in capture.lower() or 'c' in capture.lower():
-
-            print('Waiting For Turn!')
-            while True: 
-                process_data = read_from_file('Temp.json')
-                cap = process_data.get("capture","Don't Know")
-                if 'capture' not in cap.lower() or 'cet' in cap.lower() or 'ya' in cap.lower() or 'c' in cap.lower():
-                    break
-                if cap.lower().strip() == '(Capture!)'.lower():
-                    break
-            print('Our Turn!')
-            #time.sleep(2)
-
-            process_data = read_from_file('Temp.json')
-            capture = process_data.get("capture","Don't Know")
-            capRate = process_data.get("capRate","Don't Know")
-            currentIteration = process_data.get("iteration",-1)
-            try:
-                print('Capture Rate: ',capRate)
-                try:
-                    print(int(capRate))
-                except:
-                    pass
-                if (capRate == '10C' or int(capRate) > threshold) and capturedOnce == 0:
-                    print('Capturing!')
-                    click_on(app_window,click_coord['capture'])
-                    capturedOnce = 1
-            except:
-                pass
-            print('Attacking!')
-            click_on(app_window,click_coord['attack_1'])
-            time.sleep(6) # Attack property
-            print('Ending Turn\n#####################################################')
-            
-            while True:
-                process_data = read_from_file('Temp.json')
-                iteration = process_data.get("iteration",-1)
-                if iteration!=currentIteration:
-                    break  
-            print('Capture Value:',capture)
-
-
-
-        print("Finished Battle")
-        click_on(app_window,click_coord['skip'])
-        time.sleep(1)
-        click_on(app_window,click_coord['close'])
-        time.sleep(1)
-
-
-        def wait_miscrits_caught(waitEvent):
-            time.sleep(5)
-            waitEvent.set()
-
-        wait_event = threading.Event()
-        click_thread = threading.Thread(target=clicking_on_keep,args=(app_window,wait_event,))
-        click_thread.start()
-        
-        # Start the clicker function in its own thread
-        waiting_thread = threading.Thread(target=wait_miscrits_caught,args=(wait_event,))
-        waiting_thread.start()
-        
-        # Wait for both threads to finish
-        click_thread.join()
-        waiting_thread.join()
-
-def recordRegime(app_window):
+def recordRegime(app_window,resume_live_feed_event):
     file_path = "click_positions.txt"
     print("Variable access thread started...")
     battle_found_event = threading.Event()
@@ -535,15 +448,30 @@ def recordRegime(app_window):
 
         with open(file_path, "a") as f:
             f.write(f"Battle\n")
-        battle(app_window,battle_found_event)
+        battle(app_window,battle_found_event,resume_live_feed_event)
+        print('Set resume_live_feed_event')
+        resume_live_feed_event.set()
+        process_data = {
+        #    "left_pokemon_name": left_pokemon_name,
+        #    "iteration":iterationScanned,
+        #    "right_pokemon_name": right_pokemon_name,
+            "capture": 'Battle Ended',
+        #    "skip":skip,
+        #    "keep":keep,
+        #    "capRate":capRate,
+        }
+        write_to_file('Temp.json',process_data)
 
-        # Blighted feindeer 
+
         
-def playRegime(app_window):
-
+def playRegime(app_window,resume_live_feed_event):
     def wait_for_battle(battle_found_event,wait_event):
         global no_battle_counter
-        time.sleep(10)
+        repeat = 0
+        while not battle_found_event.is_set() and repeat<7:
+            time.sleep(1)
+            repeat+=1
+
         if not battle_found_event.is_set():
             print('No Battle...\n')
             no_battle_counter += 1
@@ -581,7 +509,9 @@ def playRegime(app_window):
                 battle_thread.join()
                 waiting_thread.join()
 
-                battle(app_window,battle_found_event)
+                battle(app_window, battle_found_event, resume_live_feed_event)
+       
+                resume_live_feed_event.set()
 
             elif line == 'Train':
                 print('Training...\n')
@@ -594,7 +524,7 @@ def playRegime(app_window):
                 click_on(app_window,click_coord['heal'])
                 time.sleep(1)
 
-def recording_feed(app_window,left_pokemon_name_region,right_pokemon_name_region,capture_appears,skip_appears,keep_appears,CaptureRate):
+def recording_feed(app_window,left_pokemon_name_region,right_pokemon_name_region,capture_appears,skip_appears,keep_appears,CaptureRate,resume_live_feed_event):
     sct = mss()
 
     print(f"Capturing application window: {app_window}")
@@ -604,6 +534,8 @@ def recording_feed(app_window,left_pokemon_name_region,right_pokemon_name_region
 
     while True:
         # Grab the screen based on the application's window
+        resume_live_feed_event.wait()
+
         iterationScanned += 1
         screenshot = sct.grab(app_window)
         
@@ -615,29 +547,25 @@ def recording_feed(app_window,left_pokemon_name_region,right_pokemon_name_region
         cv2.imshow("Capture Appears", capture_image)
 
         #left_pokemon_name = extract_text_region_name(frame, *left_pokemon_name_region)
-        right_pokemon_name = extract_text_region_name(frame, *right_pokemon_name_region)
+        #right_pokemon_name = extract_text_region_name(frame, *right_pokemon_name_region)
         capture = extract_text_region_name(frame, *capture_appears)
         #skip = extract_text_region_name(frame, *skip_appears)
-        keep = extract_text_region_name(frame, *keep_appears)
-        capRate = extract_text_region_health(frame,*CaptureRate)
+        #keep = extract_text_region_name(frame, *keep_appears)
+        #capRate = extract_text_region_health(frame,*CaptureRate)
 
         process_data = {
         #    "left_pokemon_name": left_pokemon_name,
-            "iteration":iterationScanned,
-            "right_pokemon_name": right_pokemon_name,
+        #    "iteration":iterationScanned,
+        #    "right_pokemon_name": right_pokemon_name,
             "capture": capture,
         #    "skip":skip,
-            "keep":keep,
-            "capRate":capRate,
+        #    "keep":keep,
+        #    "capRate":capRate,
         }
         write_to_file('Temp.json',process_data)
 
-        if cv2.waitKey(1) & 0xFF == ord("q"):
-            print("Stopping screen recording...")
-            feed_stopped.set()
-            break
-
 def main():
+    print('App begins')
     app_name = "Miscrits"  # Replace with the exact title of your application window
     initialize_shared_file('Temp.json')
     app_window = get_application_window(app_name)
@@ -649,8 +577,11 @@ def main():
     keep_appears = (1028,621,70,20)
     CaptureRate = (951,150,20,20)
 
-    screen_thread = threading.Thread(target=recording_feed,args=(app_window,left_pokemon_name_region,right_pokemon_name_region,capture_appears,skip_appears,keep_appears,CaptureRate))
-    process_thread = threading.Thread(target=playRegime,args=(app_window,)) # recordRegime playRegime
+    resume_live_feed_event = threading.Event()
+    resume_live_feed_event.set()
+
+    screen_thread = threading.Thread(target=recording_feed,args=(app_window,left_pokemon_name_region,right_pokemon_name_region,capture_appears,skip_appears,keep_appears,CaptureRate,resume_live_feed_event,))
+    process_thread = threading.Thread(target=playRegime,args=(app_window,resume_live_feed_event,)) # recordRegime playRegime
 
     # Start threads
     screen_thread.start()
