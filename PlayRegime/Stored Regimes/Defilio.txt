@@ -1,0 +1,23 @@
+Train
+(1074,492)  1
+Battle
+(978,580)  1
+Battle
+(951,445)  1
+Battle
+(1039,652)  1
+Battle
+(922,449)  1
+Battle
+Train
+(1126,626)  1
+Battle
+(856,478)  1
+Battle
+(1146,546)  1
+Battle
+(787,520)  1
+Battle
+(1068,469)  1
+Battle
+(750,628)  1

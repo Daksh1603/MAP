@@ -15,6 +15,8 @@ import threading
 from pynput import mouse
 import discord
 import asyncio
+import threading
+import time
 
 import requests
 
@@ -42,9 +44,42 @@ click_coord = {
     "closeNewMoveMiscrit": (1000, 657),
     "closeTrainMenu": (1313, 267),
     "attackRightTab" : (1342, 1025),
+    "attackLeftTab" : (596, 1023),
     "evolSkip1": (951, 793),
     "evolSkip2": (966, 752),
 }
+
+regions = {
+    "Miscrit1Level":(677,339,14,16),
+    "Miscrit2Level":(677, 389,14,16),
+    "Miscrit3Level":(677,439,14,16),
+    "Miscrit4Level":(677, 489,14,16),
+}
+
+left_pokemon_name_region = (720, 72, 80, 20)  # x, y, w, h (adjust based on your game UI)
+right_pokemon_name_region = (1180, 72, 80, 15)
+capture_appears = (928,132,90,18)
+skip_appears = (914,609,70,18)
+keep_appears = (1028,621,70,20)
+CaptureRate = (951,150,20,20)
+
+WEBHOOK_URL = "https://discord.com/api/webhooks/1313072656311910431/bA2WxdlWoZnQnkSyqEhK6e6PVU17GF_GuGbjL32fiI6JknEL_cJEe190FU4jV5X7bSTx"
+
+def send_discord_webhook(message):
+    """
+    Sends a message to the Discord channel via webhook.
+    """
+    data = {"content": message}  # Message payload
+    headers = {"Content-Type": "application/json"}
+    
+    try:
+        response = requests.post(WEBHOOK_URL, json=data, headers=headers)
+        if response.status_code == 204:
+            pass
+        else:
+            print(f"Failed to send message. Status code: {response.status_code}, Response: {response.text}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 def click_on(app_window, coord):
     x = coord[0]
@@ -86,3 +121,50 @@ def extract_text_region_name(frame, x, y, w, h):
     text = pytesseract.image_to_string(preprocessed, config=custom_config).strip()
 
     return text
+
+def recording_feed(app_window,shared_data,resume_live_feed_event):
+    sct = mss()
+
+    while True:
+        # Check if Resume
+        resume_live_feed_event.wait()
+
+        screenshot = sct.grab(app_window)
+
+        frame = np.array(screenshot)
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)  # Convert BGRA to BGR
+
+        cv2.imshow("Capture Appears", frame[capture_appears[1]:capture_appears[1] + capture_appears[3],capture_appears[0]:capture_appears[0] + capture_appears[2]])
+
+        capture = extract_text_region_name(frame, *capture_appears)
+        shared_data.append(capture)
+        #print(shared_data[0])
+
+def search_for_application(app_name):
+    while True:
+        app_window = get_application_window(app_name)
+        if app_window is not None:
+            return app_window
+        
+def get_application_window(app_name):
+    windows = gw.getWindowsWithTitle(app_name)
+    if not windows:
+        print(f"Application '{app_name}' not found.")
+        return None
+    window = windows[0]  # Select the first matching window
+    return {
+        "top": window.top,
+        "left": window.left,
+        "width": window.width,
+        "height": window.height
+    }
+
+def searching_for_battle(app_window,shared_data,battle_found_event,wait_event=threading.Event()):
+    while not wait_event.is_set():
+        capture = shared_data[0]
+        #time.sleep(waiting_time)
+        if 'capture'.lower() in capture.lower():
+            print("Battle search complete!")
+            battle_found_event.set()
+            click_on(app_window,click_coord['skip_listener'])
+            break

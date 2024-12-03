@@ -250,7 +250,7 @@ def main():
     m1t_appears = (733,338,100,14)
     m2t_appears = (732,388,100,14)
     m3t_appears = (732,438,100,14)
-    m4t_appears = (1031,941,90,15) # its your turn # skip Skip (934,607,40,20) # close rClose} (938,782,60,20) # (732,488,100,14)
+    m4t_appears = (677,339,14,16)           # Accurate Level at posi 2 (677, 389,14,16) # its your turn # skip Skip (934,607,40,20) # close rClose} (938,782,60,20) # (732,488,100,14)
 
 
 

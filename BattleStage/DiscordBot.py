@@ -12,8 +12,19 @@ import sys
 import json
 import time
 
-import base
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
+import base
+import Settings
+
+HD_TAB = Settings.HEAVY_DAMAGE[0]
+HD_NO = Settings.HEAVY_DAMAGE[1]
+
+LD_TAB = Settings.LIGHT_DAMAGE[0]
+LD_NO = Settings.LIGHT_DAMAGE[1]
+
+BUFF_TAB = Settings.NON_DAMAGE[0]
+BUFF_NO = Settings.NON_DAMAGE[1]
 #input_data = sys.stdin.read()
 input_data = json.dumps({'top': -56, 'left': 2552, 'width': 1936, 'height': 1096})
 
@@ -42,9 +53,10 @@ async def send_message_with_buttons(channel, message, screenshot, buttons, wait_
             for button in buttons:
                 for label, style in button.items():
                     button_style = (
-                        discord.ButtonStyle.red if style == "red"
-                        else discord.ButtonStyle.green if style == "green"
-                        else discord.ButtonStyle.blurple
+                    discord.ButtonStyle.danger if style == "red" else
+                    discord.ButtonStyle.success if style == "green" else
+                    discord.ButtonStyle.secondary if style == "grey" else
+                    discord.ButtonStyle.primary
                     )
                     button_instance = Button(label=label, style=button_style)
                     button_instance.callback = self.create_button_callback(label)
@@ -114,6 +126,7 @@ async def auto_loop():
     turn_region = (1031,941,90,15)  # Region to check for "turn" text
     sct = mss()
     capturedOnce = 0
+    on_tab = 1
     # Wait until the bot is ready
     await bot.wait_until_ready()
     channel = bot.get_channel(CHANNEL_ID)
@@ -136,9 +149,9 @@ async def auto_loop():
             turn = base.extract_text_region_name(frame,*turn_region)
 
         # Send a message with a screenshot and buttons, and wait for user input
-        buttons = [{"Attack 1": "red"}, {"Attack 2": "red"}, {"Add To List":"blue"}, {"Capture": "green"}]
+        buttons = [{"Heavy Damage": "red"},{"Light Damage":"blue"}, {"Buff/Debuff": "grey"}, {"Capture": "green"}, {"Add To List": "blue"}]
         if capturedOnce:
-            buttons = buttons[:-1]
+            buttons = buttons = [button for button in buttons if "Capture" not in button]
         message = "Rare Miscrit Found!"
         user_input = await send_message_with_buttons(
             channel=channel,
@@ -163,19 +176,59 @@ async def auto_loop():
             print("Timeout")
             sys.exit(0)
             break
-        elif user_input == "Attack 1":
-            base.click_on(app_window,base.click_coord['attack_1'])
-        elif user_input == "Attack 2":
-            base.click_on(app_window,base.click_coord['attack_2'])
+
+        elif user_input == "Heavy Damage":
+
+            while on_tab > HD_TAB:
+                base.click_on(app_window,base.click_coord['attackLeftTab'])
+                time.sleep(0.5)
+                on_tab-=1
+            while on_tab < HD_TAB:
+                base.click_on(app_window,base.click_coord['attackRightTab'])
+                time.sleep(0.5)
+                on_tab+=1
+
+            base.click_on(app_window,base.click_coord[f'attack_{HD_NO}'])
+            
+        elif user_input == "Light Damage":
+
+            while on_tab > LD_TAB:
+                base.click_on(app_window,base.click_coord['attackLeftTab'])
+                time.sleep(0.5)
+                on_tab-=1
+            while on_tab < LD_TAB:
+                base.click_on(app_window,base.click_coord['attackRightTab'])
+                time.sleep(0.5)
+                on_tab+=1
+
+            base.click_on(app_window,base.click_coord[f'attack_{LD_NO}'])
+
+        elif user_input == "Buff/Debuff":
+
+            while on_tab > BUFF_TAB:
+                base.click_on(app_window,base.click_coord['attackLeftTab'])
+                time.sleep(0.5)
+                on_tab-=1
+            while on_tab < BUFF_TAB:
+                base.click_on(app_window,base.click_coord['attackRightTab'])
+                time.sleep(0.5)
+                on_tab+=1
+
+            base.click_on(app_window,base.click_coord[f'attack_{BUFF_NO}'])
+
         elif user_input == "Capture":
             capturedOnce = 1
             base.click_on(app_window,base.click_coord['capture'])
-            time.sleep(2)
+            time.sleep(3)
         elif user_input == "Add To List":
+            print(on_tab)
+            while on_tab > 1:
+                base.click_on(app_window,base.click_coord['attackLeftTab'])
+                time.sleep(0.5)
+                on_tab-=1
             print('Add')
             sys.exit(0)
         else:
-            #print("Unexpected input:", user_input)
             break
         time.sleep(5)
         #########################################
@@ -188,7 +241,7 @@ async def auto_loop():
         close = base.extract_text_region_name(frame,*close_region) # -> close (t1)
 
         if 'skip' in skip.lower():
-            await send_message_to_channel(channel, "Captured Miscrit..", frame)
+            await send_message_to_channel(channel, "Captured Miscrit.. LFG", frame)
             base.click_on(app_window,base.click_coord["keep"])
             time.sleep(1)
             base.click_on(app_window,base.click_coord["close"])
@@ -197,7 +250,7 @@ async def auto_loop():
             time.sleep(1.5)
             break
         elif 'close' in close.lower():
-            await send_message_to_channel(channel, "Defeated Miscrit...")
+            await send_message_to_channel(channel, "The Miscrit Dipped...")
             base.click_on(app_window,base.click_coord["close"])
             time.sleep(1.5)
             break
@@ -214,16 +267,10 @@ async def auto_loop():
 # Automatically start the loop when the bot is ready
 @bot.event
 async def on_ready():
-    #print(f"Bot logged in as {bot.user}")
-    # Start the automatic loop
     await auto_loop()
 
 # Gracefully close the bot on script exit
 def shutdown_bot():
-    """
-    Function to gracefully disconnect the bot.
-    """
-    #print("Shutting down bot...")
     loop = asyncio.get_event_loop()
     loop.run_until_complete(bot.close())
 
