@@ -1,0 +1,13 @@
+Logout
+(1179,239)  
+Battle
+(995,476) 5
+Battle
+(972,466)
+Battle
+(1887,751)  3
+Battle
+(496,806)  3
+Battle
+(1428,126)  3
+Battle

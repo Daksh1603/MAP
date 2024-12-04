@@ -46,7 +46,7 @@ click_coord = {
     "attackRightTab" : (1342, 1025),
     "attackLeftTab" : (596, 1023),
     "evolSkip1": (951, 793),
-    "evolSkip2": (966, 752),
+    "evolSkip2": (966, 757),
 }
 
 regions = {
@@ -62,6 +62,7 @@ capture_appears = (928,132,90,18)
 skip_appears = (914,609,70,18)
 keep_appears = (1028,621,70,20)
 CaptureRate = (951,150,20,20)
+train_appears = (432,64,60,24) # Need to adjust this through Recording.py
 
 WEBHOOK_URL = "https://discord.com/api/webhooks/1313072656311910431/bA2WxdlWoZnQnkSyqEhK6e6PVU17GF_GuGbjL32fiI6JknEL_cJEe190FU4jV5X7bSTx"
 
@@ -168,3 +169,73 @@ def searching_for_battle(app_window,shared_data,battle_found_event,wait_event=th
             battle_found_event.set()
             click_on(app_window,click_coord['skip_listener'])
             break
+
+def train_check(app_window):
+    print('Train Check Begins ########################################')
+    click_on(app_window,click_coord['train'])
+    print('Train Menu Opens')
+    time.sleep(2)
+
+    m1t_appears = (733,338,100,14)
+    m2t_appears = (732,388,100,14)
+    m3t_appears = (732,438,100,14)
+    m4t_appears = (732,488,100,14)
+    
+    tempSct = mss()
+    tempScreenshot = tempSct.grab(app_window)
+    frame = np.array(tempScreenshot)
+    frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
+
+    # M1T = tempFrame[m1t_appears[1]:m1t_appears[1] + m1t_appears[3],m1t_appears[0]:m1t_appears[0] + m1t_appears[2]]
+
+    M1T = extract_text_region_name(frame,*m1t_appears)
+    M2T = extract_text_region_name(frame,*m2t_appears)
+    M3T = extract_text_region_name(frame,*m3t_appears)
+    M4T = extract_text_region_name(frame,*m4t_appears)
+
+    timeDelay = 1.5
+
+    if 'ready' in M1T.lower():
+        level_up_miscrit(1,frame,app_window,timeDelay)
+
+    if 'ready' in M2T.lower():
+        level_up_miscrit(2,frame,app_window,timeDelay)
+
+    if 'ready' in M3T.lower():
+        level_up_miscrit(3,frame,app_window,timeDelay)
+
+    if 'ready' in M4T.lower():
+        level_up_miscrit(4,frame,app_window,timeDelay)
+    
+    click_on(app_window,click_coord['closeTrainMenu'])
+    print('Train Check Ends ########################################')
+    time.sleep(2)
+
+def level_up_miscrit(miscrit_number, frame, app_window, timeDelay):
+    """Helper function to handle the leveling up process for a miscrit."""
+    miscrit_key = str(miscrit_number)
+    level = extract_text_region_name(frame,*regions[f"Miscrit{miscrit_key}Level"])
+
+    send_discord_webhook(f"Miscrit {miscrit_key} Leveled Up: {level}")
+    
+    # Perform the click actions for training
+    click_on(app_window, click_coord[f'miscrit{miscrit_key}Train'])
+    time.sleep(timeDelay)
+    click_on(app_window, click_coord['trainMiscrit'])
+    time.sleep(timeDelay)
+    click_on(app_window, click_coord['closeTrainMiscrit'])
+    time.sleep(timeDelay)
+    click_on(app_window, click_coord['closeNewMoveMiscrit'])
+    time.sleep(timeDelay)
+    click_on(app_window, click_coord['evolSkip1'])
+    time.sleep(timeDelay)
+    click_on(app_window, click_coord['evolSkip2'])
+    time.sleep(timeDelay)
+
+def logout(app_window):
+    click_on(app_window,click_coord['menu'])
+    time.sleep(1)
+    click_on(app_window,click_coord['logout'])
+    time.sleep(3)
+    click_on(app_window,click_coord['login'])
+    time.sleep(7)

@@ -18,9 +18,7 @@ def battle(app_window,battle_found_event,resume_live_feed_event,active_window=Fa
     turn_region = (1031,941,90,15)
     common_miscrits_file = 'CommonMiscrits.txt'
 
-    # Check if program is stuck
-    # if no_battle_counter >= 5:
-    #     send_discord_webhook(f"Program Stuck.") exit by turning of both threads counter
+    need_to_train = 0
     
     if battle_found_event.is_set():
         print('Cleared resume_live_feed_event')
@@ -41,6 +39,7 @@ def battle(app_window,battle_found_event,resume_live_feed_event,active_window=Fa
         right_pokemon_name = base.extract_text_region_name(frame, *right_pokemon_name_region)
 
         timeout = 0
+        discord_battle_completed = 0
         
         while True:
             screenshot = sct.grab(app_window)
@@ -56,51 +55,116 @@ def battle(app_window,battle_found_event,resume_live_feed_event,active_window=Fa
                 if right_pokemon_name not in commonAreaPokemon and not timeout and not active_window:
                     print('Unkown Miscrit: ')
 
-                    # Start the subprocess
+                    ############################# OLD METHOD ##############################
+                    # # Start the subprocess
+                    # process = subprocess.Popen(
+                    #     ["python", os.path.join("BattleStage", "DiscordBot.py")],  # Adjust if using python3 or another path
+                    #     stdin=subprocess.PIPE,             # Allow sending input to stdin
+                    #     stdout=subprocess.PIPE,            # Capture standard output (optional)
+                    #     stderr=subprocess.PIPE             # Capture standard error (optional)
+                    # )
+
+                    # stdout, stderr = process.communicate(input=json.dumps(app_window).encode())
+                    # #print("Subprocess errors:", stderr.decode())
+
+                    # outputDiscordBattle = stdout.decode()
+                    # print("Subprocess Output:", stdout.decode())
+
+                    # if 'complete' in outputDiscordBattle.lower():
+                    #     print('Successful Discord Battle')
+                    #     break
+                    # elif 'add' in outputDiscordBattle.lower():
+                    #     timeout = 1
+                    #     commonAreaPokemon.append(right_pokemon_name)
+                    #     updated_content = str(commonAreaPokemon)
+                    #     with open(common_miscrits_file, 'w') as file:
+                    #         file.write(updated_content)
+                    # else:
+                    #     timeout = 1
+
+
+                    #################### NEW METHOD (DEBUGGING) #####################
                     process = subprocess.Popen(
-                        ["python", os.path.join("BattleStage", "DiscordBot.py")],  # Adjust if using python3 or another path
-                        stdin=subprocess.PIPE,             # Allow sending input to stdin
-                        stdout=subprocess.PIPE,            # Capture standard output (optional)
-                        stderr=subprocess.PIPE             # Capture standard error (optional)
+                        ["python", "-u", os.path.join("BattleStage", "DiscordBot.py")],  # Adjust for Python3 if needed
+                        stdin=subprocess.PIPE,          # Allow sending input to stdin
+                        stdout=subprocess.PIPE,         # Capture standard output
+                        stderr=subprocess.PIPE,         # Capture standard error
+                        text=True,                      # Automatically decode the output as text
+                        bufsize=1                       # Line-buffered output for real-time reading
                     )
 
-                    stdout, stderr = process.communicate(input=json.dumps(app_window).encode())
-                    #print("Subprocess errors:", stderr.decode())
+                    # Send the input to the subprocess
+                    process.stdin.write(json.dumps(app_window) + "\n")
+                    process.stdin.flush()
 
-                    outputDiscordBattle = stdout.decode()
-                    print("Subprocess Output:", stdout.decode())
+                    # Capture and display output in real time
+                    for line in iter(process.stdout.readline, ""):  # Read lines from stdout
+                        print(line, end="")  # Print output as it is produced
 
-                    if 'complete' in outputDiscordBattle.lower():
-                        print('Successful Discord Battle')
+                        # Process the output
+                        if 'complete' in line.lower() or 'defeated' in line.lower() or 'caught' in line.lower():
+                            print('Successful Discord Battle')
+                            process.terminate()
+                            discord_battle_completed = 1
+                            break
+                        elif 'add' in line.lower():
+                            timeout = 1
+                            commonAreaPokemon.append(right_pokemon_name)
+                            updated_content = str(commonAreaPokemon)
+                            with open(common_miscrits_file, 'w') as file:
+                                file.write(updated_content)
+                        else:
+                            timeout = 1
+
+                    process.stdout.close()
+                    process.stderr.close()
+                    process.wait()
+
+                    # Break out of the loop if the condition is met
+                    if process.returncode == 0:
                         break
-                    elif 'add' in outputDiscordBattle.lower():
-                        timeout = 1
-                        commonAreaPokemon.append(right_pokemon_name)
-                        updated_content = str(commonAreaPokemon)
-                        with open(common_miscrits_file, 'w') as file:
-                            file.write(updated_content)
-                    else:
-                        timeout = 1
+                    
+                if discord_battle_completed:
+                    break
                 ########################### ADD DISCORD LOGIC ############################## Only Defeating Currently, Can Add Capture Logic Later
                 print('Attacking!')
                 base.click_on(app_window,base.click_coord['attack_1'])
                 print('Ending Turn\n#####################################################')
                 ############################################################################
             elif 'skip' in skip.lower():
-                base.click_on(app_window,base.click_coord["keep"])
+                base.click_on(app_window,base.click_coord["skip"])
                 time.sleep(1)
                 base.click_on(app_window,base.click_coord["close"])
                 time.sleep(1)
-                base.click_on(app_window,base.click_coord["skip"])
+                base.click_on(app_window,base.click_coord["keep"])
                 time.sleep(1.5)
-                print("Finished Battle")
+                print("Captured Miscrit")
                 break
             elif 'close' in close.lower():
+                need_to_train = check_if_train_req(frame)
                 base.click_on(app_window,base.click_coord["close"])
                 time.sleep(1.5)
                 print("Finished Battle")
                 break
             else:
                 pass
-
+    
+    if need_to_train:
+        base.train_check(app_window)
     resume_live_feed_event.set()
+
+def check_if_train_req(frame):
+    miscrit1ready_region = (680,482,93,10)
+    miscrit2ready_region = (824,482,93,10)
+    miscrit3ready_region = (680,576,93,10)
+    miscrit4ready_region = (824,576,93,10)
+
+    M1R = base.extract_text_region_name(frame,*miscrit1ready_region)
+    M2R = base.extract_text_region_name(frame,*miscrit2ready_region)
+    M3R = base.extract_text_region_name(frame,*miscrit3ready_region)
+    M4R = base.extract_text_region_name(frame,*miscrit4ready_region)
+
+    if 'train' in M1R.lower() or 'train' in M2R.lower() or 'train' in M3R.lower() or 'train' in M4R.lower():
+        return 1
+    else:
+        return 0

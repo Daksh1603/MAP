@@ -252,7 +252,10 @@ def main():
     m3t_appears = (732,438,100,14)
     m4t_appears = (677,339,14,16)           # Accurate Level at posi 2 (677, 389,14,16) # its your turn # skip Skip (934,607,40,20) # close rClose} (938,782,60,20) # (732,488,100,14)
 
-
+    m1r_appears = (680,482,93,10)
+    m2r_appears = (824,482,93,10)
+    m3r_appears = (680,576,93,10)
+    m4r_appears = (824,576,93,10)
 
     CaptureRate = (951,150,20,20)
     
@@ -318,13 +321,13 @@ def main():
         # Display the cropped health images
         # cv2.imshow("Left Pokémon Health", left_health_image)
         # cv2.imshow("Right Pokémon Health", right_health_image)
-        #cv2.imshow("Left Pokémon Name", left_name_image)
-        #cv2.imshow("Right Pokémon Name", right_name_image)
-        #cv2.imshow("Capture Appears", capture_image)
-        #cv2.imshow("Capture Rate", cr_image)
-        #cv2.imshow("Train Appears", ta_image)
-        #cv2.imshow("M3T Appears", m3ta_image)
-        cv2.imshow("M4T Appears", m4ta_image)
+        # cv2.imshow("Left Pokémon Name", left_name_image)
+        # cv2.imshow("Right Pokémon Name", right_name_image)
+        # cv2.imshow("Capture Appears", capture_image)
+        # cv2.imshow("Capture Rate", cr_image)
+        # cv2.imshow("Train Appears", ta_image)
+        # cv2.imshow("M3T Appears", m3ta_image)
+        # cv2.imshow("M4T Appears", m4ta_image)
 
         # left_pokemon_name = extract_text_region_name(frame, *left_pokemon_name_region)
         # right_pokemon_name = extract_text_region_name(frame, *right_pokemon_name_region)
@@ -332,15 +335,20 @@ def main():
         # skip = extract_text_region_name(frame, *skip_appears)
         # keep = extract_text_region_name(frame, *keep_appears)
         # capRate = extract_text_region_health(frame,*CaptureRate)
-        train = extract_text_region_name(frame,*train_appears)
-        M3T = extract_text_region_name(frame,*m3t_appears) # READY,TO,TRAIN a
-        M4T = extract_text_region_name(frame,*m4t_appears) # READY,TO,TRAIN a
+        # train = extract_text_region_name(frame,*train_appears)
+        # M3T = extract_text_region_name(frame,*m3t_appears) # READY,TO,TRAIN a
+        # M4T = extract_text_region_name(frame,*m4t_appears) # READY,TO,TRAIN a
+        
+        M1R = extract_text_region_name(frame,*m1r_appears)
+        M2R = extract_text_region_name(frame,*m2r_appears)
+        M3R = extract_text_region_name(frame,*m3r_appears)
+        M4R = extract_text_region_name(frame,*m4r_appears)
 
 
         # print(f"Left Pokémon: {left_pokemon_name}" + f"Right Pokémon: {right_pokemon_name} ")
         # print(f"Capture Present: {capture} Capture Rate : {capRate}\n\n\n\n")
         # print(f"Skip Present: {skip} Keep present : {keep}\n\n\n\n")
-        print(f"Train : {train}  M3T : {M3T}  M4T : {M4T}")
+        print(f"M1R : {M1R}   M2R : {M2R}   M3R : {M3R}   M4R : {M4R}") # M3T : {M3T}  M4T : {M4T}
               
         # Perform clicks on detected rocks
         # if coordinates:

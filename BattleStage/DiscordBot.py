@@ -93,7 +93,7 @@ async def send_message_with_buttons(channel, message, screenshot, buttons, wait_
         await msg.delete()  # Delete the original message on timeout
 
         # Send new message saying the user missed the battle
-        await channel.send(content="U missed the battle :(", file=discord.File(temp_file_path, filename="screenshot.png"))
+        # await channel.send(content="U missed the battle :(", file=discord.File(temp_file_path, filename="screenshot.png"))
         os.remove(temp_file_path)
         return "timeout"
 
@@ -104,29 +104,47 @@ async def send_message_to_channel(channel, content, screenshot=None):
     """Sends a simple message to the channel, with an optional image (screenshot)."""
     
     # If screenshot is provided, send the image along with the message
-    if screenshot:
-        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as temp_file:
-            temp_file_path = temp_file.name
-            cv2.imwrite(temp_file_path, screenshot)
+    print('Preparing to send message...')
+    temp_file_path = None
+    try:
+        if screenshot is not None:
+            print('Screenshot provided. Preparing to send with attachment...')
+            with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as temp_file:
+                temp_file_path = temp_file.name
+                cv2.imwrite(temp_file_path, screenshot)
+                print('CV2 Written...')
 
-            file = discord.File(temp_file_path, filename="screenshot.png")
-            await channel.send(content=content, file=file)
-            os.remove(temp_file_path)
-    else:
-        # Just send the content as text if no screenshot is provided
-        await channel.send(content=content)
+                file = discord.File(temp_file_path, filename="screenshot.png")
+                await asyncio.wait_for(channel.send(content=content, file=file), timeout=15)
+        else:
+            print('Sending text message...')
+            await asyncio.wait_for(channel.send(content=content), timeout=15)
+
+        if os.path.exists(temp_file_path):
+            os.remove(temp_file_path)    
+        print('Message sent successfully!')
+
+    except asyncio.TimeoutError:
+        print("Timeout: Failed to send the message.")
+    except Exception as e:
+        print(f"Error sending message: {e}")
 
 # The automatic loop logic
 async def auto_loop():
     """
     Automatically runs a loop, taking screenshots and interacting with Discord.
     """
+    miscritRegion = (1060,630,250,200) # Make more defined
+    right_pokemon_name_region = (1180, 72, 80, 15)
     skip_region = (934,607,40,20)
     close_region = (938,782,60,20)
-    turn_region = (1031,941,90,15)  # Region to check for "turn" text
+    turn_region = (1031,941,90,15) # Region to check for "turn" text
     sct = mss()
     capturedOnce = 0
     on_tab = 1
+    timeoutTurnTime = 5
+    miscritFrame = None
+    miscritName = 'Unknown'
     # Wait until the bot is ready
     await bot.wait_until_ready()
     channel = bot.get_channel(CHANNEL_ID)
@@ -135,47 +153,73 @@ async def auto_loop():
         return
 
     while True:
-        # Wait for Turn -> Send Message #
         frame = None
         turn = 'None'
-
-        while True:
+        
+        print('Waiting for turn to send message')
+        # Wait for Turn -> Send Message #
+        repeat = 0
+        while repeat<=timeoutTurnTime:
             if 'turn' in turn.lower() or 'your' in turn.lower():
+                print('Our Turn')
                 break
             await asyncio.sleep(1)
+            repeat+=1
+            print(repeat)
             screenshot = sct.grab(app_window)
             frame = np.array(screenshot)
             frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
             turn = base.extract_text_region_name(frame,*turn_region)
 
         # Send a message with a screenshot and buttons, and wait for user input
+        if miscritFrame is None:
+            miscritFrame = frame
+            miscritName = base.extract_text_region_name(frame, *right_pokemon_name_region)
+        print('Sending Message')
         buttons = [{"Heavy Damage": "red"},{"Light Damage":"blue"}, {"Buff/Debuff": "grey"}, {"Capture": "green"}, {"Add To List": "blue"}]
         if capturedOnce:
             buttons = buttons = [button for button in buttons if "Capture" not in button]
-        message = "Rare Miscrit Found!"
+        message = f"Rare Miscrit Found : {miscritName}"
         user_input = await send_message_with_buttons(
             channel=channel,
             message=message,
             screenshot=frame,
             buttons=buttons,
-            wait_time=30,
+            wait_time=10,
         )
+        print('Message Sent')
         ###################################
 
         # Wait for Turn -> Actual Play Turn #
-        while True:
+        print('Waiting for turn to Play')
+        repeat = 0
+        while repeat<=timeoutTurnTime:
             if 'turn' in turn.lower() or 'your' in turn.lower():
+                print('Our Turn')
                 break
             await asyncio.sleep(1)
+            repeat+=1
+            print(repeat)
             screenshot = sct.grab(app_window)
             frame = np.array(screenshot)
             frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
             turn = base.extract_text_region_name(frame,*turn_region)
         # Handle user input
+        print('Playing Turn...')
         if user_input == "timeout":
-            print("Timeout")
-            sys.exit(0)
-            break
+            while on_tab > BUFF_TAB:
+                base.click_on(app_window,base.click_coord['attackLeftTab'])
+                time.sleep(0.5)
+                on_tab-=1
+            while on_tab < BUFF_TAB:
+                base.click_on(app_window,base.click_coord['attackRightTab'])
+                time.sleep(0.5)
+                on_tab+=1
+
+            base.click_on(app_window,base.click_coord[f'attack_{BUFF_NO}'])
+            # print("Timeout")
+            # sys.exit(0)
+            # break
 
         elif user_input == "Heavy Damage":
 
@@ -230,10 +274,12 @@ async def auto_loop():
             sys.exit(0)
         else:
             break
+        print('Turn Played')
         time.sleep(5)
         #########################################
 
         # Scan For Skip Close #
+        print('Scanning results...')
         screenshot = sct.grab(app_window)
         frame = np.array(screenshot)
         frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
@@ -241,22 +287,24 @@ async def auto_loop():
         close = base.extract_text_region_name(frame,*close_region) # -> close (t1)
 
         if 'skip' in skip.lower():
-            await send_message_to_channel(channel, "Captured Miscrit.. LFG", frame)
+            await send_message_to_channel(channel, "Captured Miscrit.. LFG",screenshot=miscritFrame[miscritRegion[1]:miscritRegion[1] + miscritRegion[3],miscritRegion[0]:miscritRegion[0] + miscritRegion[2]])
+            base.click_on(app_window,base.click_coord["skip"])
+            time.sleep(2)
+            base.click_on(app_window,base.click_coord["close"])
+            time.sleep(2)
             base.click_on(app_window,base.click_coord["keep"])
             time.sleep(1)
-            base.click_on(app_window,base.click_coord["close"])
-            time.sleep(1)
-            base.click_on(app_window,base.click_coord["skip"])
-            time.sleep(1.5)
+            print('Caught')
             break
         elif 'close' in close.lower():
-            await send_message_to_channel(channel, "The Miscrit Dipped...")
+            await send_message_to_channel(channel, "The Miscrit Dipped :(",screenshot=miscritFrame[miscritRegion[1]:miscritRegion[1] + miscritRegion[3],miscritRegion[0]:miscritRegion[0] + miscritRegion[2]])
             base.click_on(app_window,base.click_coord["close"])
             time.sleep(1.5)
+            print('Defeated')
             break
         else:
+            print('Neither : The Battle Continues \n ##################################################### \n')
             pass
-
         ############################################
 
     print("Complete")
