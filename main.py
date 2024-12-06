@@ -25,13 +25,14 @@ from collections import deque
 from BattleStage.BattleLogic import battle
 from PlayRegime.PlayRegime import playRegime
 from RecordRegime.RecordRegime import recordRegime
+import Settings
 import base
 
 
 
 def main():
     print('App begins')
-    app_name = "Miscrits"  # Replace with the exact title of your application window
+    app_name = Settings.APPLICATION_NAME  # Replace with the exact title of your application window
     app_window = base.get_application_window(app_name)
     
     shared_data = deque(maxlen=1)

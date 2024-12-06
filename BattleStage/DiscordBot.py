@@ -20,11 +20,16 @@ import Settings
 HD_TAB = Settings.HEAVY_DAMAGE[0]
 HD_NO = Settings.HEAVY_DAMAGE[1]
 
+MD_TAB = Settings.MEDIUM_DAMAGE[0]
+MD_NO = Settings.MEDIUM_DAMAGE[1]
+
+
 LD_TAB = Settings.LIGHT_DAMAGE[0]
 LD_NO = Settings.LIGHT_DAMAGE[1]
 
 BUFF_TAB = Settings.NON_DAMAGE[0]
 BUFF_NO = Settings.NON_DAMAGE[1]
+
 #input_data = sys.stdin.read()
 input_data = json.dumps({'top': -56, 'left': 2552, 'width': 1936, 'height': 1096})
 
@@ -176,9 +181,10 @@ async def auto_loop():
             miscritFrame = frame
             miscritName = base.extract_text_region_name(frame, *right_pokemon_name_region)
         print('Sending Message')
-        buttons = [{"Heavy Damage": "red"},{"Light Damage":"blue"}, {"Buff/Debuff": "grey"}, {"Capture": "green"}, {"Add To List": "blue"}]
+        buttons = [{"Heavy Damage": "red"},{"Medium Damage": "red"},{"Light Damage":"blue"}, {"Buff/Debuff": "grey"}, {"Capture": "green"}, {"Add To List": "blue"}]
         if capturedOnce:
-            buttons = buttons = [button for button in buttons if "Capture" not in button]
+            buttons = [button for button in buttons if "Capture" not in button]
+            buttons.append({'Capture Again':'green'})
         message = f"Rare Miscrit Found : {miscritName}"
         user_input = await send_message_with_buttons(
             channel=channel,
@@ -233,6 +239,19 @@ async def auto_loop():
                 on_tab+=1
 
             base.click_on(app_window,base.click_coord[f'attack_{HD_NO}'])
+        
+        elif user_input == "Medium Damage":
+
+            while on_tab > MD_TAB:
+                base.click_on(app_window,base.click_coord['attackLeftTab'])
+                time.sleep(0.5)
+                on_tab-=1
+            while on_tab < MD_TAB:
+                base.click_on(app_window,base.click_coord['attackRightTab'])
+                time.sleep(0.5)
+                on_tab+=1
+
+            base.click_on(app_window,base.click_coord[f'attack_{MD_NO}'])
             
         elif user_input == "Light Damage":
 
@@ -264,6 +283,13 @@ async def auto_loop():
             capturedOnce = 1
             base.click_on(app_window,base.click_coord['capture'])
             time.sleep(3)
+
+        elif user_input == "Capture Again":
+            base.click_on(app_window,base.click_coord['capture'])
+            time.sleep(1.5)
+            base.click_on(app_window,base.click_coord['capture2prompt'])
+            time.sleep(3)
+            
         elif user_input == "Add To List":
             print(on_tab)
             while on_tab > 1:

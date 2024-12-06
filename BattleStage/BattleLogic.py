@@ -16,9 +16,10 @@ def battle(app_window,battle_found_event,resume_live_feed_event,active_window=Fa
     skip_region = (934,607,40,20)
     close_region = (938,782,60,20)
     turn_region = (1031,941,90,15)
+    skip_new_miscrit_caught = (930,743,70,20)
     common_miscrits_file = 'CommonMiscrits.txt'
 
-    need_to_train = 0
+    need_to_train = None
     
     if battle_found_event.is_set():
         print('Cleared resume_live_feed_event')
@@ -129,6 +130,7 @@ def battle(app_window,battle_found_event,resume_live_feed_event,active_window=Fa
                 ########################### ADD DISCORD LOGIC ############################## Only Defeating Currently, Can Add Capture Logic Later
                 print('Attacking!')
                 base.click_on(app_window,base.click_coord['attack_1'])
+                time.sleep(1.5)
                 print('Ending Turn\n#####################################################')
                 ############################################################################
             elif 'skip' in skip.lower():
@@ -148,9 +150,17 @@ def battle(app_window,battle_found_event,resume_live_feed_event,active_window=Fa
                 break
             else:
                 pass
+        
+        screenshot = sct.grab(app_window)
+        frame = np.array(screenshot)
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
+        Skip = base.extract_text_region_name(frame, *skip_new_miscrit_caught)
+        if 'skip' in Skip.lower():
+            base.click_on(app_window,base.click_coord["caughCritSkip"])
+            time.sleep(1)
     
-    if need_to_train:
-        base.train_check(app_window)
+    if need_to_train is not None:
+        base.train_check(app_window,*need_to_train)
     resume_live_feed_event.set()
 
 def check_if_train_req(frame):
@@ -165,6 +175,6 @@ def check_if_train_req(frame):
     M4R = base.extract_text_region_name(frame,*miscrit4ready_region)
 
     if 'train' in M1R.lower() or 'train' in M2R.lower() or 'train' in M3R.lower() or 'train' in M4R.lower():
-        return 1
+        return (M1R,M2R,M3R,M4R)
     else:
-        return 0
+        return None

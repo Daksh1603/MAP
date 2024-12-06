@@ -18,7 +18,14 @@ import asyncio
 import threading
 import time
 
+import win32api
+import win32gui
+import win32con
+
+
 import requests
+
+import Settings
 
 click_coord = {
     "keep": (1057, 634),
@@ -29,6 +36,7 @@ click_coord = {
     "close": (995,791),
     "skip": (943,617),
     "capture": (952,141),
+    "capture2prompt": (1010,617),
     "skip_listener": (900,200),
     "train": (432,64),
     "trainMiscrit": (1015, 291),
@@ -47,6 +55,7 @@ click_coord = {
     "attackLeftTab" : (596, 1023),
     "evolSkip1": (951, 793),
     "evolSkip2": (966, 757),
+    "caughCritSkip": (940,747),
 }
 
 regions = {
@@ -83,8 +92,8 @@ def send_discord_webhook(message):
         print(f"An error occurred: {e}")
 
 def click_on(app_window, coord):
-    x = coord[0]
-    y = coord[1]
+    ################## ACTIVE CLICK ############################
+    x,y = coord
 
     window_left = app_window['left']
     window_top = app_window['top']
@@ -96,6 +105,31 @@ def click_on(app_window, coord):
     # Move the mouse to the calculated position and click
     pyautogui.moveTo(screen_x, screen_y)
     pyautogui.click()
+
+    ################## BACKGROUND CLICK #########################
+    # app_name = Settings.APPLICATION_NAME
+    
+    # # Find the window handle (HWND) for the application
+    # hwnd = win32gui.FindWindow(None, app_name)
+    # if not hwnd:
+    #     raise ValueError(f"Window '{app_name}' not found.")
+
+    # # Get the window's position and size (screen coordinates)
+    # window_rect = win32gui.GetWindowRect(hwnd)
+    # window_left, window_top, _, _ = window_rect
+
+    # # Convert relative coordinates to screen coordinates
+    # relative_x, relative_y = coord
+    # screen_x = window_left + relative_x
+    # screen_y = window_top + relative_y
+
+    # # Convert screen coordinates to client coordinates for the target window
+    # client_x, client_y = win32gui.ScreenToClient(hwnd, (screen_x, screen_y))
+
+    # # Send the click messages directly to the window (in the background)
+    # lparam = win32api.MAKELONG(client_x, client_y)  # Pack client coordinates into lParam
+    # win32gui.PostMessage(hwnd, win32con.WM_LBUTTONDOWN, win32con.MK_LBUTTON, lparam)  # Mouse down
+    # win32gui.PostMessage(hwnd, win32con.WM_LBUTTONUP, 0, lparam)  # Mouse up
 
 def extract_text_region_name(frame, x, y, w, h):
     region = frame[y:y+h, x:x+w]
@@ -125,7 +159,7 @@ def extract_text_region_name(frame, x, y, w, h):
 
 def recording_feed(app_window,shared_data,resume_live_feed_event):
     sct = mss()
-
+    print(f"Capturing application window: {app_window}")
     while True:
         # Check if Resume
         resume_live_feed_event.wait()
@@ -135,7 +169,7 @@ def recording_feed(app_window,shared_data,resume_live_feed_event):
         frame = np.array(screenshot)
         frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)  # Convert BGRA to BGR
 
-        cv2.imshow("Capture Appears", frame[capture_appears[1]:capture_appears[1] + capture_appears[3],capture_appears[0]:capture_appears[0] + capture_appears[2]])
+        #cv2.imshow("Capture Appears", frame[capture_appears[1]:capture_appears[1] + capture_appears[3],capture_appears[0]:capture_appears[0] + capture_appears[2]])
 
         capture = extract_text_region_name(frame, *capture_appears)
         shared_data.append(capture)
@@ -170,7 +204,7 @@ def searching_for_battle(app_window,shared_data,battle_found_event,wait_event=th
             click_on(app_window,click_coord['skip_listener'])
             break
 
-def train_check(app_window):
+def train_check(app_window,M1R=None,M2R=None,M3R=None,M4R=None):
     print('Train Check Begins ########################################')
     click_on(app_window,click_coord['train'])
     print('Train Menu Opens')
@@ -187,13 +221,15 @@ def train_check(app_window):
     frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
 
     # M1T = tempFrame[m1t_appears[1]:m1t_appears[1] + m1t_appears[3],m1t_appears[0]:m1t_appears[0] + m1t_appears[2]]
+    if M1R is not None:
+        M1T,M2T,M3T,M4T = M1R,M2R,M3R,M4R
+    else:
+        M1T = extract_text_region_name(frame,*m1t_appears)
+        M2T = extract_text_region_name(frame,*m2t_appears)
+        M3T = extract_text_region_name(frame,*m3t_appears)
+        M4T = extract_text_region_name(frame,*m4t_appears)
 
-    M1T = extract_text_region_name(frame,*m1t_appears)
-    M2T = extract_text_region_name(frame,*m2t_appears)
-    M3T = extract_text_region_name(frame,*m3t_appears)
-    M4T = extract_text_region_name(frame,*m4t_appears)
-
-    timeDelay = 1.5
+    timeDelay = Settings.TRAIN_TIME_DELAY
 
     if 'ready' in M1T.lower():
         level_up_miscrit(1,frame,app_window,timeDelay)
@@ -216,7 +252,7 @@ def level_up_miscrit(miscrit_number, frame, app_window, timeDelay):
     miscrit_key = str(miscrit_number)
     level = extract_text_region_name(frame,*regions[f"Miscrit{miscrit_key}Level"])
 
-    send_discord_webhook(f"Miscrit {miscrit_key} Leveled Up: {level}")
+    send_discord_webhook(f"Miscrit {miscrit_key} Leveled Up: {level}") # <@{Settings.DISCORD_USER_ID}> 
     
     # Perform the click actions for training
     click_on(app_window, click_coord[f'miscrit{miscrit_key}Train'])

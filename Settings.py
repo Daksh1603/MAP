@@ -1,7 +1,14 @@
 HEAVY_DAMAGE = (1,1) # TAB 1 2 3 (In Order)
-LIGHT_DAMAGE = (3,4)
+MEDIUM_DAMAGE = (2,2)
+LIGHT_DAMAGE = (3,2)
 NON_DAMAGE = (1,2)
 
-REGIME_FILE = 'm2sFlutter.txt'
+
+REGIME_FILE = 'Freedom.txt'
+TRAIN_TIME_DELAY = 1.5
+
+APPLICATION_NAME = 'Miscrits (DEBUG)'
 
 DISCORD_USER_ID = 236268536950030337
+
+CLICK_ON_MODE = 1 # 1 , 2 Not in effect yet

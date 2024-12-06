@@ -252,7 +252,9 @@ def main():
     m3t_appears = (732,438,100,14)
     m4t_appears = (677,339,14,16)           # Accurate Level at posi 2 (677, 389,14,16) # its your turn # skip Skip (934,607,40,20) # close rClose} (938,782,60,20) # (732,488,100,14)
 
-    m1r_appears = (680,482,93,10)
+    m1r_appears = (930,743,70,20) # Now Skip
+
+
     m2r_appears = (824,482,93,10)
     m3r_appears = (680,576,93,10)
     m4r_appears = (824,576,93,10)
@@ -312,7 +314,7 @@ def main():
         ta_image = frame[train_appears[1]:train_appears[1] + train_appears[3],train_appears[0]:train_appears[0] + train_appears[2]]
         
     
-        m1ta_image = frame[m1t_appears[1]:m1t_appears[1] + m1t_appears[3],m1t_appears[0]:m1t_appears[0] + m1t_appears[2]]
+        m1ta_image = frame[m1r_appears[1]:m1r_appears[1] + m1r_appears[3],m1r_appears[0]:m1r_appears[0] + m1r_appears[2]]
         m2ta_image = frame[m2t_appears[1]:m2t_appears[1] + m2t_appears[3],m2t_appears[0]:m2t_appears[0] + m2t_appears[2]]
         m3ta_image = frame[m3t_appears[1]:m3t_appears[1] + m3t_appears[3],m3t_appears[0]:m3t_appears[0] + m3t_appears[2]]
         m4ta_image = frame[m4t_appears[1]:m4t_appears[1] + m4t_appears[3],m4t_appears[0]:m4t_appears[0] + m4t_appears[2]]
@@ -326,7 +328,7 @@ def main():
         # cv2.imshow("Capture Appears", capture_image)
         # cv2.imshow("Capture Rate", cr_image)
         # cv2.imshow("Train Appears", ta_image)
-        # cv2.imshow("M3T Appears", m3ta_image)
+        cv2.imshow("Skip Appears", m1ta_image)
         # cv2.imshow("M4T Appears", m4ta_image)
 
         # left_pokemon_name = extract_text_region_name(frame, *left_pokemon_name_region)
