@@ -17,6 +17,7 @@ def battle(app_window,battle_found_event,resume_live_feed_event,active_window=Fa
     close_region = (938,782,60,20)
     turn_region = (1031,941,90,15)
     skip_new_miscrit_caught = (930,743,70,20)
+    capture_rate_region = (951,150,20,20)
     common_miscrits_file = 'CommonMiscrits.txt'
 
     need_to_train = None
@@ -38,6 +39,18 @@ def battle(app_window,battle_found_event,resume_live_feed_event,active_window=Fa
         frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
 
         right_pokemon_name = base.extract_text_region_name(frame, *right_pokemon_name_region)
+        cap_rate = base.extract_text_region_name(frame, *capture_rate_region)
+
+
+        ### CAP RATE TESTING #####
+        with open('capRates.txt', 'r') as file:
+            content = file.read().strip()
+            existing_list = eval(content)
+
+        if cap_rate not in existing_list:
+            filepath = os.path.join('capRates', f"{cap_rate}.png")
+            cv2.imwrite(filepath, frame)
+        ###########################
 
         timeout = 0
         discord_battle_completed = 0
@@ -107,6 +120,7 @@ def battle(app_window,battle_found_event,resume_live_feed_event,active_window=Fa
                             print('Successful Discord Battle')
                             process.terminate()
                             discord_battle_completed = 1
+                            time.sleep(1)
                             break
                         elif 'add' in line.lower():
                             timeout = 1
@@ -114,6 +128,8 @@ def battle(app_window,battle_found_event,resume_live_feed_event,active_window=Fa
                             updated_content = str(commonAreaPokemon)
                             with open(common_miscrits_file, 'w') as file:
                                 file.write(updated_content)
+                        elif 'skip' in line.lower():
+                            timeout = 1
                         else:
                             timeout = 1
 
@@ -122,8 +138,8 @@ def battle(app_window,battle_found_event,resume_live_feed_event,active_window=Fa
                     process.wait()
 
                     # Break out of the loop if the condition is met
-                    if process.returncode == 0:
-                        break
+                    # if process.returncode == 0:
+                    #     break
                     
                 if discord_battle_completed:
                     break

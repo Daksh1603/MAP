@@ -4,7 +4,7 @@ LIGHT_DAMAGE = (3,2)
 NON_DAMAGE = (1,2)
 
 
-REGIME_FILE = 'Freedom.txt'
+REGIME_FILE = 'BlightedSprout.txt'
 TRAIN_TIME_DELAY = 1.5
 
 APPLICATION_NAME = 'Miscrits (DEBUG)'

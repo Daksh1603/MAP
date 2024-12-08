@@ -181,7 +181,7 @@ async def auto_loop():
             miscritFrame = frame
             miscritName = base.extract_text_region_name(frame, *right_pokemon_name_region)
         print('Sending Message')
-        buttons = [{"Heavy Damage": "red"},{"Medium Damage": "red"},{"Light Damage":"blue"}, {"Buff/Debuff": "grey"}, {"Capture": "green"}, {"Add To List": "blue"}]
+        buttons = [{"Heavy Damage": "red"},{"Medium Damage": "red"},{"Light Damage":"blue"}, {"Buff/Debuff": "grey"}, {"Capture": "green"}, {"Add To List": "blue"},{"Skip":"blue"}]
         if capturedOnce:
             buttons = [button for button in buttons if "Capture" not in button]
             buttons.append({'Capture Again':'green'})
@@ -291,12 +291,19 @@ async def auto_loop():
             time.sleep(3)
             
         elif user_input == "Add To List":
-            print(on_tab)
             while on_tab > 1:
                 base.click_on(app_window,base.click_coord['attackLeftTab'])
                 time.sleep(0.5)
                 on_tab-=1
             print('Add')
+            sys.exit(0)
+
+        elif user_input == "Skip":
+            while on_tab > 1:
+                base.click_on(app_window,base.click_coord['attackLeftTab'])
+                time.sleep(0.5)
+                on_tab-=1
+            print('Skip')
             sys.exit(0)
         else:
             break
@@ -313,11 +320,17 @@ async def auto_loop():
         close = base.extract_text_region_name(frame,*close_region) # -> close (t1)
 
         if 'skip' in skip.lower():
-            await send_message_to_channel(channel, "Captured Miscrit.. LFG",screenshot=miscritFrame[miscritRegion[1]:miscritRegion[1] + miscritRegion[3],miscritRegion[0]:miscritRegion[0] + miscritRegion[2]])
+            #await send_message_to_channel(channel, "Captured Miscrit.. LFG",screenshot=miscritFrame[miscritRegion[1]:miscritRegion[1] + miscritRegion[3],miscritRegion[0]:miscritRegion[0] + miscritRegion[2]])
             base.click_on(app_window,base.click_coord["skip"])
             time.sleep(2)
             base.click_on(app_window,base.click_coord["close"])
             time.sleep(2)
+
+            screenshot = sct.grab(app_window)
+            frame = np.array(screenshot)
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
+            await send_message_to_channel(channel, "Captured Miscrit.. LFG",screenshot=frame[int(frame.shape[0]*0.3):int(frame.shape[0]*0.7), int(frame.shape[1]*0.3):int(frame.shape[1]*0.7)]) # add only stats part ##### TEMP ONLY CENTRAL 40% 
+            
             base.click_on(app_window,base.click_coord["keep"])
             time.sleep(1)
             print('Caught')
