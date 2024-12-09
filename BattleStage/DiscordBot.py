@@ -335,7 +335,7 @@ async def auto_loop():
             time.sleep(1)
             print('Caught')
             break
-        elif 'close' in close.lower():
+        elif 'close' in close.lower() or 'lose' in close.lower():
             await send_message_to_channel(channel, "The Miscrit Dipped :(",screenshot=miscritFrame[miscritRegion[1]:miscritRegion[1] + miscritRegion[3],miscritRegion[0]:miscritRegion[0] + miscritRegion[2]])
             base.click_on(app_window,base.click_coord["close"])
             time.sleep(1.5)

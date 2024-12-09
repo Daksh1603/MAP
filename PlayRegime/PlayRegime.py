@@ -8,6 +8,7 @@ from mss import mss
 import cv2
 import numpy as np
 import os
+import subprocess
 
 def playRegime(app_window,shared_data,resume_live_feed_event):
     def wait_for_battle(battle_found_event,wait_event):
@@ -30,14 +31,13 @@ def playRegime(app_window,shared_data,resume_live_feed_event):
         for line in lines:
             line = line.strip()
 
-            if line not in ['Battle','Train','Logout','Heal']:
+            if line not in ['Battle','Train','Logout','Heal'] and 'Wait' not in line:
                 parts = line.split()
                 coords = parts[0]
                 delay = float(parts[1]) if len(parts) > 1 else 2.0
                 position = eval(coords)
                 print(f'Moving to {position}\n')
-                base.click_on(app_window, position)
-                #print(delay)
+                base.click_on(app_window,position)
                 time.sleep(delay) # default: 2 | wait along with click_positions.txt
 
             elif line  == 'Battle':
@@ -71,7 +71,11 @@ def playRegime(app_window,shared_data,resume_live_feed_event):
             elif line == 'Logout':
                 print('Logging Out...\n')
                 base.logout(app_window)
-
+            elif 'Wait' in line:
+                parts = line.split()
+                delay = float(parts[1]) if len(parts) > 1 else 2.0
+                print('Waiting...',delay)
+                time.sleep(delay)
             else:
                 print('Healing...\n')
                 base.click_on(app_window,base.click_coord['heal'])

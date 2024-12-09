@@ -26,7 +26,6 @@ def battle(app_window,battle_found_event,resume_live_feed_event,active_window=Fa
         print('Cleared resume_live_feed_event')
         resume_live_feed_event.clear()
 
-
         with open(common_miscrits_file, 'r') as file:
             file_content = file.read().strip()
         commonAreaPokemon = ast.literal_eval(file_content)
@@ -50,11 +49,18 @@ def battle(app_window,battle_found_event,resume_live_feed_event,active_window=Fa
         if cap_rate not in existing_list:
             filepath = os.path.join('capRates', f"{cap_rate}.png")
             cv2.imwrite(filepath, frame)
+            existing_list.append(cap_rate)
+            with open('capRates.txt', 'w') as file:
+                            file.write(str(existing_list))
         ###########################
 
         timeout = 0
         discord_battle_completed = 0
-        
+        raise_alert = 0
+
+        if str(cap_rate) in ['28','28Â°','28�','27','27Â°','27�','18','18Â°','18�','17','17Â°','17�','{7','{7Â°','{7�']:
+            raise_alert = 1
+
         while True:
             screenshot = sct.grab(app_window)
             frame = np.array(screenshot)
@@ -62,11 +68,12 @@ def battle(app_window,battle_found_event,resume_live_feed_event,active_window=Fa
             skip = base.extract_text_region_name(frame,*skip_region) # -> skip close keep (t1,t2,t3)
             close = base.extract_text_region_name(frame,*close_region) # -> close (t1)
             turn = base.extract_text_region_name(frame,*turn_region)
+            #print(skip,close,turn)
 
 
             if 'turn' in turn.lower() or 'your' in turn.lower():
                 ######################## RARE MISCRIT LOGIC ###############################
-                if right_pokemon_name not in commonAreaPokemon and not timeout and not active_window:
+                if (right_pokemon_name not in commonAreaPokemon or raise_alert) and not timeout and not active_window:
                     print('Unkown Miscrit: ')
 
                     ############################# OLD METHOD ##############################
@@ -158,7 +165,7 @@ def battle(app_window,battle_found_event,resume_live_feed_event,active_window=Fa
                 time.sleep(1.5)
                 print("Captured Miscrit")
                 break
-            elif 'close' in close.lower():
+            elif 'close' in close.lower() or 'los' in close.lower():
                 need_to_train = check_if_train_req(frame)
                 base.click_on(app_window,base.click_coord["close"])
                 time.sleep(1.5)
@@ -189,7 +196,8 @@ def check_if_train_req(frame):
     M2R = base.extract_text_region_name(frame,*miscrit2ready_region)
     M3R = base.extract_text_region_name(frame,*miscrit3ready_region)
     M4R = base.extract_text_region_name(frame,*miscrit4ready_region)
-
+    # print('M2R : ',M2R)
+    # cv2.imwrite('M2R.png', frame[miscrit2ready_region[1]:miscrit2ready_region[1] + miscrit2ready_region[3],miscrit2ready_region[0]:miscrit2ready_region[0] + miscrit2ready_region[2]])
     if 'train' in M1R.lower() or 'train' in M2R.lower() or 'train' in M3R.lower() or 'train' in M4R.lower():
         return (M1R,M2R,M3R,M4R)
     else:

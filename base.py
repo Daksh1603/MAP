@@ -18,10 +18,10 @@ import asyncio
 import threading
 import time
 
-import win32api
 import win32gui
 import win32con
-
+import ctypes
+import subprocess
 
 import requests
 
@@ -91,7 +91,7 @@ def send_discord_webhook(message):
     except Exception as e:
         print(f"An error occurred: {e}")
 
-def click_on(app_window, coord):
+def click_on(app_window, coord, window_name = 'Miscrits (DEBUG)'):
     ################## ACTIVE CLICK ############################
     x,y = coord
 
@@ -106,30 +106,57 @@ def click_on(app_window, coord):
     pyautogui.moveTo(screen_x, screen_y)
     pyautogui.click()
 
-    ################## BACKGROUND CLICK #########################
-    # app_name = Settings.APPLICATION_NAME
-    
-    # # Find the window handle (HWND) for the application
-    # hwnd = win32gui.FindWindow(None, app_name)
-    # if not hwnd:
-    #     raise ValueError(f"Window '{app_name}' not found.")
 
-    # # Get the window's position and size (screen coordinates)
-    # window_rect = win32gui.GetWindowRect(hwnd)
-    # window_left, window_top, _, _ = window_rect
+def background_click_scaled(coord: tuple, window_name: str = "Miscrits (DEBUG)"):
+    # Original Window Size (Maximized)
+    original_width = 1936
+    original_height = 1096
 
-    # # Convert relative coordinates to screen coordinates
-    # relative_x, relative_y = coord
-    # screen_x = window_left + relative_x
-    # screen_y = window_top + relative_y
+    # Find the window handle by its name
+    hwnd = win32gui.FindWindow(None, window_name)
+    if not hwnd:
+        raise Exception(f"Window '{window_name}' not found.")
+    print('HWND : ',hwnd)
+    # Get the current window's position and size using GetWindowRect
+    rect = win32gui.GetWindowRect(hwnd)
+    win_left, win_top, win_right, win_bottom = rect
+    print('Client window Rect : ',win_left, win_top, win_right, win_bottom)
 
-    # # Convert screen coordinates to client coordinates for the target window
-    # client_x, client_y = win32gui.ScreenToClient(hwnd, (screen_x, screen_y))
+    # Get current window size (width and height)
+    current_width = win_right - win_left
+    current_height = win_bottom - win_top
 
-    # # Send the click messages directly to the window (in the background)
-    # lparam = win32api.MAKELONG(client_x, client_y)  # Pack client coordinates into lParam
-    # win32gui.PostMessage(hwnd, win32con.WM_LBUTTONDOWN, win32con.MK_LBUTTON, lparam)  # Mouse down
-    # win32gui.PostMessage(hwnd, win32con.WM_LBUTTONUP, 0, lparam)  # Mouse up
+    print('Current Width and Height : ',current_width,current_height)
+
+    # Ensure the current size is different from the original size (to scale)
+    original_x, original_y = coord
+    scale_x = current_width / original_width
+    scale_y = current_height / original_height
+
+    # Scale the coordinates
+    client_x = int(original_x * scale_x)
+    client_y = int(original_y * scale_y)
+
+    print('Click x and y scaled : ',client_x,client_y)
+
+    # Convert to client area coordinates
+    client_x = client_x # + win_left
+    client_y = client_y + win_top
+    print('Final click x and y :',client_x,client_y)
+
+    # Define constants for sending input messages
+    WM_LBUTTONDOWN = 0x0201
+    WM_LBUTTONUP = 0x0202
+
+    # Pack coordinates into LPARAM
+    lparam = (client_y << 16) | (client_x & 0xFFFF)
+
+    #ctypes.windll.user32.SetCursorPos(client_x, client_y)
+    #time.sleep(10)
+    # Simulate the click in the background
+    ctypes.windll.user32.PostMessageW(hwnd, WM_LBUTTONDOWN, 0, lparam)
+    ctypes.windll.user32.PostMessageW(hwnd, WM_LBUTTONUP, 0, lparam)
+
 
 def extract_text_region_name(frame, x, y, w, h):
     region = frame[y:y+h, x:x+w]
@@ -198,7 +225,7 @@ def searching_for_battle(app_window,shared_data,battle_found_event,wait_event=th
     while not wait_event.is_set():
         capture = shared_data[0]
         #time.sleep(waiting_time)
-        if 'capture'.lower() in capture.lower():
+        if 'capture' in capture.lower() or 'ture' in capture.lower():
             print("Battle search complete!")
             battle_found_event.set()
             click_on(app_window,click_coord['skip_listener'])

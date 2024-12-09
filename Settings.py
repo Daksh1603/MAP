@@ -4,11 +4,11 @@ LIGHT_DAMAGE = (3,2)
 NON_DAMAGE = (1,2)
 
 
-REGIME_FILE = 'BlightedSprout.txt'
+REGIME_FILE = 'Kelpa.txt'
 TRAIN_TIME_DELAY = 1.5
 
 APPLICATION_NAME = 'Miscrits (DEBUG)'
 
 DISCORD_USER_ID = 236268536950030337
 
-CLICK_ON_MODE = 1 # 1 , 2 Not in effect yet
+CLICK_ON_MODE = 2 # 1 , 2 
