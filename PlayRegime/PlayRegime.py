@@ -23,6 +23,9 @@ def playRegime(app_window,shared_data,resume_live_feed_event):
     file_name = os.path.join('PlayRegime','Stored Regimes',Settings.REGIME_FILE) # Add file not found when creating UI
     with open(file_name, 'r') as file:
         lines = file.readlines()
+    
+    logs_file = "Logs.txt"
+    open(logs_file, 'w').close()
 
     no_battle_counter = 0
     while True:
@@ -37,7 +40,7 @@ def playRegime(app_window,shared_data,resume_live_feed_event):
                 position = eval(coords)
                 print(f'Moving to {position}\n')
                 base.click_on(app_window, position)
-                #print(delay)
+                # print(delay)
                 time.sleep(delay) # default: 2 | wait along with click_positions.txt
 
             elif line  == 'Battle':
