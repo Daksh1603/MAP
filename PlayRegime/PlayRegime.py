@@ -30,7 +30,7 @@ def playRegime(app_window,shared_data,resume_live_feed_event):
         for line in lines:
             line = line.strip()
 
-            if line not in ['Battle','Train','Logout','Heal']:
+            if line not in ['Battle','Train','Logout','Heal'] and 'Wait' not in line:
                 parts = line.split()
                 coords = parts[0]
                 delay = float(parts[1]) if len(parts) > 1 else 2.0
@@ -71,7 +71,11 @@ def playRegime(app_window,shared_data,resume_live_feed_event):
             elif line == 'Logout':
                 print('Logging Out...\n')
                 base.logout(app_window)
-
+            elif 'Wait' in line:
+                parts = line.split()
+                delay = float(parts[1]) if len(parts) > 1 else 2.0
+                print('Waiting...',delay)
+                time.sleep(delay)
             else:
                 print('Healing...\n')
                 base.click_on(app_window,base.click_coord['heal'])

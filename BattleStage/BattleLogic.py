@@ -50,11 +50,20 @@ def battle(app_window,battle_found_event,resume_live_feed_event,active_window=Fa
         if cap_rate not in existing_list:
             filepath = os.path.join('capRates', f"{cap_rate}.png")
             cv2.imwrite(filepath, frame)
+            existing_list.append(cap_rate)
+            with open('capRates.txt', 'w') as file:
+                file.write(str(existing_list))
+        
+        
         ###########################
 
         timeout = 0
         discord_battle_completed = 0
+        raise_alert = 0
+        if str(cap_rate) in ['28','28Â°','28�','27','27Â°','27�','18','18Â°','18�','17','17Â°','17�','{7','{7Â°','{7�']:
+            raise_alert = 1
         
+
         while True:
             screenshot = sct.grab(app_window)
             frame = np.array(screenshot)
@@ -66,7 +75,7 @@ def battle(app_window,battle_found_event,resume_live_feed_event,active_window=Fa
 
             if 'turn' in turn.lower() or 'your' in turn.lower():
                 ######################## RARE MISCRIT LOGIC ###############################
-                if right_pokemon_name not in commonAreaPokemon and not timeout and not active_window:
+                if (right_pokemon_name not in commonAreaPokemon or raise_alert) and not timeout and not active_window:
                     print('Unkown Miscrit: ')
 
                     ############################# OLD METHOD ##############################
