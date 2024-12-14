@@ -2,3 +2,7 @@ __pycache__
 BattleStage/__pycache__
 PlayRegime/__pycache__
 RecordRegime/__pycache__
+capRates/*
+build/
+my_program.spec
+Logs/

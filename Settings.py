@@ -4,11 +4,70 @@ LIGHT_DAMAGE = (3,2)
 NON_DAMAGE = (1,2)
 
 
-REGIME_FILE = 'BlightedSprout.txt'
+REGIME_FILE = 'DarkCroaky.txt'
 TRAIN_TIME_DELAY = 1.5
 
 APPLICATION_NAME = 'Miscrits (DEBUG)'
 
 DISCORD_USER_ID = 236268536950030337
 
-CLICK_ON_MODE = 1 # 1 , 2 Not in effect yet
+RAISE_DISCORD_ALERT = 1
+
+
+
+
+############ WILD HUNT #############
+
+WILD_HUNT = 1
+WILD_HUNT_SEARCH_COUNT = 1000
+
+############# AUTO CAPTURE #########
+AUTO_CAPTURE_MOVESET = None
+AUTO_CAPTURE_PLAT = None
+AUTO_CAPTURE_NOPLAT = None
+
+
+
+
+
+
+
+
+
+
+
+COMMON_APLUS = 0
+COMMON_S = 0
+COMMON_SPLUS = 0
+
+
+RARE_APLUS = 1
+RARE_S = 0
+RARE_SPLUS = 0
+
+EPIC_APLUS = 0
+EPIC_S = 1
+EPIC_SPLUS = 1
+
+RATING_ALERT_LIST = []
+
+if COMMON_APLUS:
+    RATING_ALERT_LIST.append('30')
+if COMMON_S:
+    RATING_ALERT_LIST.extend(['28','28Â°','28�'])
+if COMMON_SPLUS:
+    RATING_ALERT_LIST.extend(['27','27Â°','27�'])
+
+if RARE_APLUS:
+    RATING_ALERT_LIST.append('20')
+if RARE_S:
+    RATING_ALERT_LIST.extend(['18','18Â°','18�'])
+if RARE_SPLUS:
+    RATING_ALERT_LIST.extend(['17','17Â°','17�','{7','{7Â°','{7�'])
+
+if EPIC_APLUS:
+    RATING_ALERT_LIST.append('10')
+if EPIC_S:
+    RATING_ALERT_LIST.extend(['8','ry:','ry'])
+if EPIC_SPLUS:
+    RATING_ALERT_LIST.extend(['7'])

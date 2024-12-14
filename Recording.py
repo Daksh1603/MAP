@@ -279,6 +279,10 @@ def main():
         # Convert the screenshot to a NumPy array (BGR format for OpenCV)
         frame = np.array(screenshot)
         frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)  # Convert BGRA to BGR
+
+        mouse_position = get_mouse_location_relative(app_window)
+        if mouse_position:
+            print(f"Mouse at relative position: {mouse_position}")
         
         # Draw the mouse cursor on the frame
         #frame = draw_mouse_cursor(frame, app_window)

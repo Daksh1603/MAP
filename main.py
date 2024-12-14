@@ -23,6 +23,7 @@ from collections import deque
 
 
 from BattleStage.BattleLogic import battle
+from BattleStage.WildHunt import playWildHunt
 from PlayRegime.PlayRegime import playRegime
 from RecordRegime.RecordRegime import recordRegime
 import Settings
@@ -41,7 +42,7 @@ def main():
     resume_live_feed_event.set()
 
     screen_thread = threading.Thread(target=base.recording_feed,args=(app_window,shared_data,resume_live_feed_event,))
-    process_thread = threading.Thread(target=playRegime,args=(app_window,shared_data,resume_live_feed_event,)) # recordRegime playRegime
+    process_thread = threading.Thread(target=playWildHunt,args=(app_window,shared_data,resume_live_feed_event,)) # recordRegime playRegime playWildHunt
 
     # Start threads
     screen_thread.start()

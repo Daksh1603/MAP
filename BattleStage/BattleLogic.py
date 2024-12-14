@@ -1,4 +1,5 @@
 import base
+import Settings
 
 import cv2
 from mss import mss
@@ -21,6 +22,7 @@ def battle(app_window,battle_found_event,resume_live_feed_event,active_window=Fa
     common_miscrits_file = 'CommonMiscrits.txt'
 
     need_to_train = None
+    register_cap = 1
     
     if battle_found_event.is_set():
         print('Cleared resume_live_feed_event')
@@ -39,29 +41,16 @@ def battle(app_window,battle_found_event,resume_live_feed_event,active_window=Fa
         frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
 
         right_pokemon_name = base.extract_text_region_name(frame, *right_pokemon_name_region)
-        cap_rate = base.extract_text_region_name(frame, *capture_rate_region)
-
-
-        ### CAP RATE TESTING #####
-        with open('capRates.txt', 'r') as file:
-            content = file.read().strip()
-            existing_list = eval(content)
-
-        if cap_rate not in existing_list:
-            filepath = os.path.join('capRates', f"{cap_rate}.png")
-            cv2.imwrite(filepath, frame)
-            existing_list.append(cap_rate)
-            with open('capRates.txt', 'w') as file:
-                file.write(str(existing_list))
-        
-        
         ###########################
 
         timeout = 0
         discord_battle_completed = 0
         raise_alert = 0
-        if str(cap_rate) in ['28','28Â°','28�','27','27Â°','27�','18','18Â°','18�','17','17Â°','17�','{7','{7Â°','{7�']:
-            raise_alert = 1
+
+        existing_list = None
+        with open('capRates.txt', 'r') as file:
+            content = file.read().strip()
+            existing_list = eval(content)
         
 
         while True:
@@ -71,11 +60,26 @@ def battle(app_window,battle_found_event,resume_live_feed_event,active_window=Fa
             skip = base.extract_text_region_name(frame,*skip_region) # -> skip close keep (t1,t2,t3)
             close = base.extract_text_region_name(frame,*close_region) # -> close (t1)
             turn = base.extract_text_region_name(frame,*turn_region)
-
+            cap_rate = base.extract_text_region_name(frame, *capture_rate_region)
 
             if 'turn' in turn.lower() or 'your' in turn.lower():
                 ######################## RARE MISCRIT LOGIC ###############################
-                if (right_pokemon_name not in commonAreaPokemon or raise_alert) and not timeout and not active_window:
+                if cap_rate not in existing_list:
+                        if cap_rate == 'ry:':
+                            cap_rate = 'ry'
+                        filepath = os.path.join('capRates', f"{cap_rate}.png")
+                        cv2.imwrite(filepath, frame)
+                        existing_list.append(cap_rate)
+                        with open('capRates.txt', 'w') as file:
+                            file.write(str(existing_list))
+                            
+                if register_cap:
+                    register_cap = 0
+                    if str(cap_rate) in Settings.RATING_ALERT_LIST:
+                        raise_alert = 1
+                    base.LOG_STRING += f"MISCRIT:{right_pokemon_name.strip()} CAP_RATE:{cap_rate}\n"
+
+                if (right_pokemon_name not in commonAreaPokemon or raise_alert) and not timeout and not active_window and Settings.RAISE_DISCORD_ALERT:
                     print('Unkown Miscrit: ')
 
                     ############################# OLD METHOD ##############################

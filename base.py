@@ -27,6 +27,12 @@ import requests
 
 import Settings
 
+### CHANGING METRIC VARIABLES ####
+LOG_STRING = ""
+SEARCH_COUNT = 1
+BATTLE_COUNT = 1
+###################################
+
 click_coord = {
     "keep": (1057, 634),
     "attack_1": (785,1018),
@@ -56,6 +62,7 @@ click_coord = {
     "evolSkip1": (951, 793),
     "evolSkip2": (966, 757),
     "caughCritSkip": (940,747),
+    "run_away_from_battle": (614,942),
 }
 
 regions = {
