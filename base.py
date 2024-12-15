@@ -32,6 +32,11 @@ LOG_STRING = ""
 SEARCH_COUNT = 1
 BATTLE_COUNT = 1
 ###################################
+cap_rate_dict ={
+    'bt':81,
+    'ot':91,
+    '10c':100,
+}
 
 click_coord = {
     "keep": (1057, 634),
@@ -82,19 +87,28 @@ train_appears = (432,64,60,24) # Need to adjust this through Recording.py
 
 WEBHOOK_URL = "https://discord.com/api/webhooks/1313072656311910431/bA2WxdlWoZnQnkSyqEhK6e6PVU17GF_GuGbjL32fiI6JknEL_cJEe190FU4jV5X7bSTx"
 
-def send_discord_webhook(message):
+def send_discord_webhook(message,frame=None):
     """
     Sends a message to the Discord channel via webhook.
     """
-    data = {"content": message}  # Message payload
-    headers = {"Content-Type": "application/json"}
-    
     try:
+        data = {"content": message}  # Message payload
+        headers = {"Content-Type": "application/json"}
         response = requests.post(WEBHOOK_URL, json=data, headers=headers)
-        if response.status_code == 204:
-            pass
-        else:
+
+        if response.status_code not in (200, 204):
             print(f"Failed to send message. Status code: {response.status_code}, Response: {response.text}")
+
+        # Step 2: Send the frame as an image if provided
+        if frame is not None:
+            _, img_encoded = cv2.imencode('.png', frame)
+            files = {"file": ("frame.png", img_encoded.tobytes(), "image/png")}
+            response = requests.post(WEBHOOK_URL, files=files)
+
+            if response.status_code not in (200, 204):
+                print(f"Failed to send image. Status code: {response.status_code}, Response: {response.text}")
+            else:
+                print("Image successfully sent to Discord.")
     except Exception as e:
         print(f"An error occurred: {e}")
 

@@ -1,3 +1,6 @@
 (966,552) 6
 Battle
 Wait 4
+
+discordbattle autocap
+search count

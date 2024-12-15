@@ -1,6 +1,7 @@
 import base
 import Settings
 from BattleStage.BattleLogic import battle
+from BattleStage.AutoCapture import auto_capture
 
 import cv2
 from mss import mss
@@ -14,9 +15,19 @@ import ast
 import os
 from datetime import datetime
 
+tracking_list = None
+with open("TrackingMiscrits.txt", "r") as f:
+    tracking_list = eval(f.read() or "[]")
+
 def playWildHunt(app_window,shared_data,resume_live_feed_event):
-    def search_cooldown():
-        time.sleep(20)
+    search_count_wh = [0]
+
+    def search_cooldown(search_count_wh):
+        if search_count_wh[0] >= Settings.WILD_HUNT_SEARCH_COUNT:
+            time.sleep(24*60*60)
+        else:
+            search_count_wh[0] += 1
+            time.sleep(20)
 
     file_name = os.path.join('PlayRegime','Stored Regimes',Settings.REGIME_FILE) # Add file not found when creating UI
     with open(file_name, "r") as file:
@@ -40,17 +51,18 @@ def playWildHunt(app_window,shared_data,resume_live_feed_event):
                     if separated:  # Ensure there are sub-parts
                         base.SEARCH_COUNT = int(separated[1]) + 1
         with open(logs_file, 'a') as logs:
-                    logs.write("#####################################\n")
+                    logs.write("##################################### ")
     else:
         open(logs_file, 'w').close()
     ###############################################
 
     while True:
+        print('Search No. : ',search_count_wh[0])
         current_time = datetime.now()
         time_difference = current_time - start_time
         hours, remainder = divmod(time_difference.total_seconds(), 3600)
         minutes, seconds = divmod(remainder, 60)
-        base.LOG_STRING = f"SearchNo:{base.SEARCH_COUNT} {int(hours)}h:{int(minutes)}m:{int(seconds)}s "
+        base.LOG_STRING = f"\nSearchNo:{base.SEARCH_COUNT} {int(hours)}h:{int(minutes)}m:{int(seconds)}s "
         base.SEARCH_COUNT += 1
             
         waiting_event = threading.Event()
@@ -59,7 +71,7 @@ def playWildHunt(app_window,shared_data,resume_live_feed_event):
         ##### WILD HUNT #####
         wild_hunt_thread = threading.Thread(target=WildHunt_WRAPPER,args=(app_window,shared_data,battle_found_event,waiting_event,coord,))
         wild_hunt_thread.start()
-        search_cooldown_thread = threading.Thread(target=search_cooldown,args=())
+        search_cooldown_thread = threading.Thread(target=search_cooldown,args=(search_count_wh,))
         search_cooldown_thread.start()
         wild_hunt_thread.join()
         search_cooldown_thread.join()
@@ -84,7 +96,7 @@ def WildHunt_WRAPPER(app_window,shared_data,battle_found_event,resume_live_feed_
             repeat+=1
             print(repeat)
         if not battle_found_event.is_set():
-            base.LOG_STRING += f"NoBattle\n"
+            base.LOG_STRING += f"NoBattle "
             print('No Battle...\n')
             wait_event.set()
 
@@ -107,6 +119,8 @@ def WildHunt_WRAPPER(app_window,shared_data,battle_found_event,resume_live_feed_
 
 
 def WildHunt(app_window,battle_found_event,resume_live_feed_event,active_window=False):
+    global tracking_list
+    
     right_pokemon_name_region = (1180, 72, 80, 15)
     close_region = (938,782,60,20)
     turn_region = (1031,941,90,15)
@@ -162,15 +176,19 @@ def WildHunt(app_window,battle_found_event,resume_live_feed_event,active_window=
                     register_cap = 0
                     if str(cap_rate) in Settings.RATING_ALERT_LIST:
                         raise_alert = 1
-                    base.LOG_STRING += f"MISCRIT:{right_pokemon_name.strip()} CAP_RATE:{cap_rate}\n"
+                    base.LOG_STRING += f"MISCRIT:{right_pokemon_name.strip()} CAP_RATE:{cap_rate} "
+                
 
-                if (right_pokemon_name not in commonAreaPokemon or raise_alert) and not timeout and not active_window:
+                if (right_pokemon_name not in commonAreaPokemon or (Settings.AUTO_CAPTURE_MODE and right_pokemon_name in tracking_list) or raise_alert) and not timeout and not active_window:
                     print('Unkown Miscrit : ',right_pokemon_name)
                     ############################################################################
                     # AUTO CAPTURE
-                    if auto_capture_successful:
-                        base.click_on(app_window,base.click_coord['heal'])
-                        time.sleep(1)
+                    if Settings.AUTO_CAPTURE_MODE:
+                        auto_capture(app_window,right_pokemon_name,cap_rate)
+
+                        with open("TrackingMiscrits.txt", "r") as f:
+                            tracking_list = eval(f.read() or "[]")
+                        
                         break
 
                     # DISCORD BATTLE

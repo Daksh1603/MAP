@@ -21,7 +21,6 @@ import requests
 from collections import deque
 
 
-
 from BattleStage.BattleLogic import battle
 from BattleStage.WildHunt import playWildHunt
 from PlayRegime.PlayRegime import playRegime

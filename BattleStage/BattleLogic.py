@@ -77,7 +77,7 @@ def battle(app_window,battle_found_event,resume_live_feed_event,active_window=Fa
                     register_cap = 0
                     if str(cap_rate) in Settings.RATING_ALERT_LIST:
                         raise_alert = 1
-                    base.LOG_STRING += f"MISCRIT:{right_pokemon_name.strip()} CAP_RATE:{cap_rate}\n"
+                    base.LOG_STRING += f"MISCRIT:{right_pokemon_name.strip()} CAP_RATE:{cap_rate} "
 
                 if (right_pokemon_name not in commonAreaPokemon or raise_alert) and not timeout and not active_window and Settings.RAISE_DISCORD_ALERT:
                     print('Unkown Miscrit: ')

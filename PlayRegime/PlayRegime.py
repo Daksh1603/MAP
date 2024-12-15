@@ -42,7 +42,7 @@ def playRegime(app_window,shared_data,resume_live_feed_event):
                     if separated:  # Ensure there are sub-parts
                         base.SEARCH_COUNT = int(separated[1]) + 1
         with open(logs_file, 'a') as logs:
-                    logs.write("#####################################\n")
+                    logs.write("##################################### ")
     else:
         open(logs_file, 'w').close()
     
@@ -68,7 +68,7 @@ def playRegime(app_window,shared_data,resume_live_feed_event):
                 time_difference = current_time - start_time
                 hours, remainder = divmod(time_difference.total_seconds(), 3600)
                 minutes, seconds = divmod(remainder, 60)
-                base.LOG_STRING = f"SearchNo:{base.SEARCH_COUNT} {int(hours)}h:{int(minutes)}m:{int(seconds)}s "
+                base.LOG_STRING = f"\nSearchNo:{base.SEARCH_COUNT} {int(hours)}h:{int(minutes)}m:{int(seconds)}s "
                 base.SEARCH_COUNT += 1
 
                 if no_battle_counter >= 5:
