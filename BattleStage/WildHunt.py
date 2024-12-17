@@ -21,9 +21,13 @@ with open("TrackingMiscrits.txt", "r") as f:
 
 def playWildHunt(app_window,shared_data,resume_live_feed_event):
     search_count_wh = [0]
-
     def search_cooldown(search_count_wh):
+
+        if search_count_wh[0] % 100 == 0 and search_count_wh[0] != 0:
+            base.send_discord_webhook(f"We are on Search {search_count_wh[0]}!")
+
         if search_count_wh[0] >= Settings.WILD_HUNT_SEARCH_COUNT:
+            base.send_discord_webhook(f"Tired af, fininshed all {Settings.WILD_HUNT_SEARCH_COUNT} searches , imma chill now ")
             time.sleep(24*60*60)
         else:
             search_count_wh[0] += 1

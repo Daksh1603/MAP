@@ -4,3 +4,6 @@ Wait 4
 
 discordbattle autocap
 search count
+logs actual day wise
+day skip 
+ee miscrit

@@ -1,5 +1,6 @@
 import base
 import Settings
+from BattleStage.AutoCapture import auto_capture
 
 import cv2
 from mss import mss
@@ -12,7 +13,12 @@ import json
 import ast
 import os
 
+tracking_list = None
+with open("TrackingMiscrits.txt", "r") as f:
+    tracking_list = eval(f.read() or "[]")
+
 def battle(app_window,battle_found_event,resume_live_feed_event,active_window=False):
+    global tracking_list
     right_pokemon_name_region = (1180, 72, 80, 15)
     skip_region = (934,607,40,20)
     close_region = (938,782,60,20)
@@ -79,9 +85,15 @@ def battle(app_window,battle_found_event,resume_live_feed_event,active_window=Fa
                         raise_alert = 1
                     base.LOG_STRING += f"MISCRIT:{right_pokemon_name.strip()} CAP_RATE:{cap_rate} "
 
-                if (right_pokemon_name not in commonAreaPokemon or raise_alert) and not timeout and not active_window and Settings.RAISE_DISCORD_ALERT:
+                if (right_pokemon_name not in commonAreaPokemon or (Settings.AUTO_CAPTURE_MODE and right_pokemon_name in tracking_list) or raise_alert) and not timeout and not active_window and Settings.RAISE_DISCORD_ALERT:
                     print('Unkown Miscrit: ')
+                    if Settings.AUTO_CAPTURE_MODE:
+                        auto_capture(app_window,right_pokemon_name,cap_rate)
 
+                        with open("TrackingMiscrits.txt", "r") as f:
+                            tracking_list = eval(f.read() or "[]")
+                        
+                        break
                     ############################# OLD METHOD ##############################
                     # # Start the subprocess
                     # process = subprocess.Popen(

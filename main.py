@@ -41,7 +41,7 @@ def main():
     resume_live_feed_event.set()
 
     screen_thread = threading.Thread(target=base.recording_feed,args=(app_window,shared_data,resume_live_feed_event,))
-    process_thread = threading.Thread(target=playWildHunt,args=(app_window,shared_data,resume_live_feed_event,)) # recordRegime playRegime playWildHunt
+    process_thread = threading.Thread(target=playRegime,args=(app_window,shared_data,resume_live_feed_event,)) # recordRegime playRegime playWildHunt
 
     # Start threads
     screen_thread.start()

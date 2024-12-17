@@ -48,10 +48,10 @@ def auto_capture(app_window,miscrit,capRate):
     newMiscrit = None
     miscritFrame = None
 
-    if miscrit not in commonAreaPokemon and 'ee' != newMiscrit.lower(): 
+    if miscrit not in commonAreaPokemon: 
         max_capture = 1 + Settings.AUTO_CAPTURE_MAX
         newMiscrit = 1
-    elif capRate in Settings.AUTO_CAPTURE_PLAT_LIST: # add flag for discord battle auto_capture_plat  | also if exotic or legendary 
+    elif capRate in Settings.RATING_ALERT_LIST: # add flag for discord battle auto_capture_plat  | also if exotic or legendary 
         max_capture = 1 + Settings.AUTO_CAPTURE_MAX
     else: # add flag for discord battle auto_capture_noplat
         max_capture = 1
@@ -59,6 +59,11 @@ def auto_capture(app_window,miscrit,capRate):
     cap_count = 0
     platWasted = 0
     on_tab = 1
+
+    existing_list = None
+    with open('capRates.txt', 'r') as file:
+            content = file.read().strip()
+            existing_list = eval(content)
 
     while True:
         screenshot = sct.grab(app_window)
@@ -74,6 +79,15 @@ def auto_capture(app_window,miscrit,capRate):
             miscritFrame = frame
 
         if 'turn' in turn.lower() or 'your' in turn.lower():
+            ## CAP RATE STORE ###
+            if cap_rate not in existing_list:
+                if cap_rate == 'ry:':
+                    cap_rate = 'ry'
+                filepath = os.path.join('capRates', f"{cap_rate}.png")
+                cv2.imwrite(filepath, frame)
+                existing_list.append(cap_rate)
+                with open('capRates.txt', 'w') as file:
+                    file.write(str(existing_list))
             print('################################################\nDeciding Capture')
             # CAP RATE TAKEN LOGIC
             capRate = None
@@ -135,7 +149,7 @@ def auto_capture(app_window,miscrit,capRate):
             base.click_on(app_window,base.click_coord["keep"])
             time.sleep(1.5)
             if newMiscrit:
-                base.send_discord_webhook(f"<@{USER_ID}>  YOOOO NEW MISCRIT CAUGHT (and added to list ofc) '{miscrit}', Also I ended up wasiting {platWasted} Plat :D",frame=frame[int(frame.shape[0]*0.3):int(frame.shape[0]*0.7), int(frame.shape[1]*0.3):int(frame.shape[1]*0.7)])
+                base.send_discord_webhook(f"<@{USER_ID}>  YOOOO NEW MISCRIT CAUGHT (and added to list ofc) '{miscrit}', Also I ended up wasiting {platWasted} Plat :D ({base.SEARCH_COUNT})",frame=frame[int(frame.shape[0]*0.3):int(frame.shape[0]*0.7), int(frame.shape[1]*0.3):int(frame.shape[1]*0.7)])
                 
                 commonAreaPokemon.append(miscrit)
                 updated_content = str(commonAreaPokemon)
@@ -158,14 +172,14 @@ def auto_capture(app_window,miscrit,capRate):
                     base.click_on(app_window,base.click_coord["caughCritSkip"])
                     time.sleep(1)
             else:
-                base.send_discord_webhook(f"<@{USER_ID}>  YOOOO I Caught this '{miscrit}', Also I ended up wasiting {platWasted} Plat :D",frame=frame[int(frame.shape[0]*0.3):int(frame.shape[0]*0.7), int(frame.shape[1]*0.3):int(frame.shape[1]*0.7)])
+                base.send_discord_webhook(f"<@{USER_ID}>  YOOOO I Caught this '{miscrit}', Also I ended up wasiting {platWasted} Plat :D ({base.SEARCH_COUNT})",frame=frame[int(frame.shape[0]*0.3):int(frame.shape[0]*0.7), int(frame.shape[1]*0.3):int(frame.shape[1]*0.7)])
                 pass
 
             base.LOG_STRING += f"PLAT WASTED {platWasted} "
             print("Captured Miscrit")
             break
         elif 'close' in close.lower():
-            base.send_discord_webhook(f"<@{USER_ID}> I couldn't capture this guy, he too stupid :P",frame=miscritFrame[miscritRegion[1]:miscritRegion[1] + miscritRegion[3],miscritRegion[0]:miscritRegion[0] + miscritRegion[2]])
+            base.send_discord_webhook(f"<@{USER_ID}> I couldn't capture this guy, he too stupid :P : {capRate} ({base.SEARCH_COUNT})",frame=miscritFrame[miscritRegion[1]:miscritRegion[1] + miscritRegion[3],miscritRegion[0]:miscritRegion[0] + miscritRegion[2]])
             base.click_on(app_window,base.click_coord["close"])
             time.sleep(1.5)
             print("Finished Battle")
