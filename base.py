@@ -36,6 +36,8 @@ cap_rate_dict ={
     'bt':81,
     'ot':91,
     '10c':100,
+    'st' : 51,
+    'at' : 41,
 }
 
 click_coord = {

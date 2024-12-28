@@ -69,6 +69,9 @@ def playRegime(app_window,shared_data,resume_live_feed_event):
                 hours, remainder = divmod(time_difference.total_seconds(), 3600)
                 minutes, seconds = divmod(remainder, 60)
                 base.LOG_STRING = f"\nSearchNo:{base.SEARCH_COUNT} {int(hours)}h:{int(minutes)}m:{int(seconds)}s "
+                if base.SEARCH_COUNT >= Settings.MAX_SEARCH_TODAY:
+                    base.send_discord_webhook(f"Tired af, fininshed all {Settings.SEARCH_COUNT} searches , imma chill now ")
+                    time.sleep(24*60*60)
                 base.SEARCH_COUNT += 1
 
                 if no_battle_counter >= 5:

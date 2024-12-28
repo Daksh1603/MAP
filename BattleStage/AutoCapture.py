@@ -48,6 +48,8 @@ def auto_capture(app_window,miscrit,capRate):
     newMiscrit = None
     miscritFrame = None
 
+    capture_miscrit_count = 0
+
     if miscrit not in commonAreaPokemon: 
         max_capture = 1 + Settings.AUTO_CAPTURE_MAX
         newMiscrit = 1
@@ -70,15 +72,66 @@ def auto_capture(app_window,miscrit,capRate):
         frame = np.array(screenshot)
         frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
         out.write(frame)
+        miscrit_name = base.extract_text_region_name(frame,*right_pokemon_name_region) #
         skip = base.extract_text_region_name(frame,*skip_region) # -> skip close keep (t1,t2,t3)
         close = base.extract_text_region_name(frame,*close_region) # -> close (t1)
         turn = base.extract_text_region_name(frame,*turn_region)
         cap_rate = base.extract_text_region_name(frame, *capture_rate_region)
 
-        if miscritFrame is None:
+        if miscrit_name == miscrit and miscritFrame is None:
             miscritFrame = frame
 
-        if 'turn' in turn.lower() or 'your' in turn.lower():
+            
+        if 'close' in close.lower():
+            base.click_on(app_window,base.click_coord["close"])
+            time.sleep(1.5)
+            if capture_miscrit_count == 0:
+                base.send_discord_webhook(f"<@{USER_ID}> I couldn't capture this guy, he too stupid :P : {capRate} ({base.SEARCH_COUNT})",frame=miscritFrame[miscritRegion[1]:miscritRegion[1] + miscritRegion[3],miscritRegion[0]:miscritRegion[0] + miscritRegion[2]])
+            else:
+                while capture_miscrit_count:
+                    capture_miscrit_count -=1
+                    screenshot = sct.grab(app_window)
+                    frame = np.array(screenshot)
+                    frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
+                    base.click_on(app_window,base.click_coord["keep"])
+                    time.sleep(1.5)
+                    if newMiscrit:
+                        base.send_discord_webhook(f"<@{USER_ID}>  YOOOO NEW MISCRIT CAUGHT (and added to list ofc) '{miscrit}', Also I ended up wasiting {platWasted} Plat :D ({base.SEARCH_COUNT})",frame=frame[int(frame.shape[0]*0.3):int(frame.shape[0]*0.7), int(frame.shape[1]*0.3):int(frame.shape[1]*0.7)])
+                        
+                        commonAreaPokemon.append(miscrit)
+                        updated_content = str(commonAreaPokemon)
+                        with open(common_miscrits_file, 'w') as file:
+                            file.write(updated_content)
+                        
+                        if Settings.AUTO_TRACKING:
+                            with open(tracking_miscrits_file, 'r+') as f:
+                                my_list = eval(f.read() or "[]")  # Safely handle empty file
+                                my_list.append(miscrit)
+                                f.seek(0)
+                                f.truncate()
+                                f.write(str(my_list))
+
+                        screenshot = sct.grab(app_window)
+                        frame = np.array(screenshot)
+                        frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
+                        Skip = base.extract_text_region_name(frame, *skip_new_miscrit_caught)
+                        if 'skip' in Skip.lower():
+                            base.click_on(app_window,base.click_coord["caughCritSkip"])
+                            time.sleep(1)
+                    else:
+                        base.send_discord_webhook(f"<@{USER_ID}>  YOOOO I Caught this '{miscrit}', Also I ended up wasiting {platWasted} Plat :D ({base.SEARCH_COUNT})",frame=frame[int(frame.shape[0]*0.3):int(frame.shape[0]*0.7), int(frame.shape[1]*0.3):int(frame.shape[1]*0.7)])
+                        pass
+            print("Finished Battle")
+            break
+
+        elif 'skip' in skip.lower():
+            base.click_on(app_window,base.click_coord["skip"])
+            time.sleep(3)
+            capture_miscrit_count += 1
+            base.LOG_STRING += f"PLAT WASTED {platWasted} "
+            print("Captured Miscrit")
+
+        elif 'turn' in turn.lower() or 'your' in turn.lower():
             ## CAP RATE STORE ###
             if cap_rate not in existing_list:
                 if cap_rate == 'ry:':
@@ -94,10 +147,11 @@ def auto_capture(app_window,miscrit,capRate):
             try:
                 capRate = int(cap_rate)
             except:
-                capRate = base.cap_rate_dict.get(cap_rate.lower(),-1)
+                capRate = base.cap_rate_dict.get(cap_rate.lower(),-1) # update
 
             # CAPTURE LOGIC
-            if capRate >= Settings.AUTO_CAPTURE_THRESHOLDRATE and cap_count < max_capture:
+            if miscrit_name == miscrit and capRate >= Settings.AUTO_CAPTURE_THRESHOLDRATE and cap_count < max_capture:
+                move = Settings.AUTO_CAPTURE_MOVE
                 if cap_count == 0:
                     pass
                     base.click_on(app_window,base.click_coord['capture'])
@@ -121,7 +175,7 @@ def auto_capture(app_window,miscrit,capRate):
                 skip = base.extract_text_region_name(frame,*skip_region)
                 
             else:
-                if cap_count >= max_capture:
+                if miscrit_name != miscrit or cap_count >= max_capture:
                     move = Settings.HEAVY_DAMAGE
                 ############ ATTACK #############
                 while on_tab > move[0]:
@@ -137,53 +191,6 @@ def auto_capture(app_window,miscrit,capRate):
                 #################################
             print('Ending Turn\n#####################################################')
             ############################################################################
-        if 'skip' in skip.lower():
-            base.click_on(app_window,base.click_coord["skip"])
-            time.sleep(1.5)
-            base.click_on(app_window,base.click_coord["close"])
-            time.sleep(1.5)
-
-            screenshot = sct.grab(app_window)
-            frame = np.array(screenshot)
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
-            base.click_on(app_window,base.click_coord["keep"])
-            time.sleep(1.5)
-            if newMiscrit:
-                base.send_discord_webhook(f"<@{USER_ID}>  YOOOO NEW MISCRIT CAUGHT (and added to list ofc) '{miscrit}', Also I ended up wasiting {platWasted} Plat :D ({base.SEARCH_COUNT})",frame=frame[int(frame.shape[0]*0.3):int(frame.shape[0]*0.7), int(frame.shape[1]*0.3):int(frame.shape[1]*0.7)])
-                
-                commonAreaPokemon.append(miscrit)
-                updated_content = str(commonAreaPokemon)
-                with open(common_miscrits_file, 'w') as file:
-                    file.write(updated_content)
-                
-                if Settings.AUTO_TRACKING:
-                    with open(tracking_miscrits_file, 'r+') as f:
-                        my_list = eval(f.read() or "[]")  # Safely handle empty file
-                        my_list.append(miscrit)
-                        f.seek(0)
-                        f.truncate()
-                        f.write(str(my_list))
-
-                screenshot = sct.grab(app_window)
-                frame = np.array(screenshot)
-                frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
-                Skip = base.extract_text_region_name(frame, *skip_new_miscrit_caught)
-                if 'skip' in Skip.lower():
-                    base.click_on(app_window,base.click_coord["caughCritSkip"])
-                    time.sleep(1)
-            else:
-                base.send_discord_webhook(f"<@{USER_ID}>  YOOOO I Caught this '{miscrit}', Also I ended up wasiting {platWasted} Plat :D ({base.SEARCH_COUNT})",frame=frame[int(frame.shape[0]*0.3):int(frame.shape[0]*0.7), int(frame.shape[1]*0.3):int(frame.shape[1]*0.7)])
-                pass
-
-            base.LOG_STRING += f"PLAT WASTED {platWasted} "
-            print("Captured Miscrit")
-            break
-        elif 'close' in close.lower():
-            base.send_discord_webhook(f"<@{USER_ID}> I couldn't capture this guy, he too stupid :P : {capRate} ({base.SEARCH_COUNT})",frame=miscritFrame[miscritRegion[1]:miscritRegion[1] + miscritRegion[3],miscritRegion[0]:miscritRegion[0] + miscritRegion[2]])
-            base.click_on(app_window,base.click_coord["close"])
-            time.sleep(1.5)
-            print("Finished Battle")
-            break
         else:
             pass
     

@@ -42,11 +42,6 @@ def battle(app_window,battle_found_event,resume_live_feed_event,active_window=Fa
         print("Battle Started")
 
         sct = mss()
-        screenshot = sct.grab(app_window)
-        frame = np.array(screenshot)
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
-
-        right_pokemon_name = base.extract_text_region_name(frame, *right_pokemon_name_region)
         ###########################
 
         timeout = 0
@@ -63,7 +58,7 @@ def battle(app_window,battle_found_event,resume_live_feed_event,active_window=Fa
             screenshot = sct.grab(app_window)
             frame = np.array(screenshot)
             frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
-            skip = base.extract_text_region_name(frame,*skip_region) # -> skip close keep (t1,t2,t3)
+            current_miscrit = base.extract_text_region_name(frame, *right_pokemon_name_region)
             close = base.extract_text_region_name(frame,*close_region) # -> close (t1)
             turn = base.extract_text_region_name(frame,*turn_region)
             cap_rate = base.extract_text_region_name(frame, *capture_rate_region)
@@ -83,46 +78,19 @@ def battle(app_window,battle_found_event,resume_live_feed_event,active_window=Fa
                     register_cap = 0
                     if str(cap_rate) in Settings.RATING_ALERT_LIST:
                         raise_alert = 1
-                    base.LOG_STRING += f"MISCRIT:{right_pokemon_name.strip()} CAP_RATE:{cap_rate} "
+                    base.LOG_STRING += f"MISCRIT:{current_miscrit.strip()} CAP_RATE:{cap_rate} "
 
-                if (right_pokemon_name not in commonAreaPokemon or (Settings.AUTO_CAPTURE_MODE and right_pokemon_name in tracking_list) or raise_alert) and not timeout and not active_window and Settings.RAISE_DISCORD_ALERT:
+                if (current_miscrit not in commonAreaPokemon or (Settings.AUTO_CAPTURE_MODE and current_miscrit in tracking_list) or raise_alert) and not timeout and not active_window and Settings.RAISE_DISCORD_ALERT:
                     print('Unkown Miscrit: ')
                     if Settings.AUTO_CAPTURE_MODE:
-                        auto_capture(app_window,right_pokemon_name,cap_rate)
+                        auto_capture(app_window,current_miscrit,cap_rate)
 
                         with open("TrackingMiscrits.txt", "r") as f:
                             tracking_list = eval(f.read() or "[]")
                         
                         break
-                    ############################# OLD METHOD ##############################
-                    # # Start the subprocess
-                    # process = subprocess.Popen(
-                    #     ["python", os.path.join("BattleStage", "DiscordBot.py")],  # Adjust if using python3 or another path
-                    #     stdin=subprocess.PIPE,             # Allow sending input to stdin
-                    #     stdout=subprocess.PIPE,            # Capture standard output (optional)
-                    #     stderr=subprocess.PIPE             # Capture standard error (optional)
-                    # )
-
-                    # stdout, stderr = process.communicate(input=json.dumps(app_window).encode())
-                    # #print("Subprocess errors:", stderr.decode())
-
-                    # outputDiscordBattle = stdout.decode()
-                    # print("Subprocess Output:", stdout.decode())
-
-                    # if 'complete' in outputDiscordBattle.lower():
-                    #     print('Successful Discord Battle')
-                    #     break
-                    # elif 'add' in outputDiscordBattle.lower():
-                    #     timeout = 1
-                    #     commonAreaPokemon.append(right_pokemon_name)
-                    #     updated_content = str(commonAreaPokemon)
-                    #     with open(common_miscrits_file, 'w') as file:
-                    #         file.write(updated_content)
-                    # else:
-                    #     timeout = 1
 
 
-                    #################### NEW METHOD (DEBUGGING) #####################
                     process = subprocess.Popen(
                         ["python", "-u", os.path.join("BattleStage", "DiscordBot.py")],  # Adjust for Python3 if needed
                         stdin=subprocess.PIPE,          # Allow sending input to stdin
@@ -149,7 +117,7 @@ def battle(app_window,battle_found_event,resume_live_feed_event,active_window=Fa
                             break
                         elif 'add' in line.lower():
                             timeout = 1
-                            commonAreaPokemon.append(right_pokemon_name)
+                            commonAreaPokemon.append(current_miscrit)
                             updated_content = str(commonAreaPokemon)
                             with open(common_miscrits_file, 'w') as file:
                                 file.write(updated_content)
@@ -174,15 +142,6 @@ def battle(app_window,battle_found_event,resume_live_feed_event,active_window=Fa
                 time.sleep(1.5)
                 print('Ending Turn\n#####################################################')
                 ############################################################################
-            elif 'skip' in skip.lower():
-                base.click_on(app_window,base.click_coord["skip"])
-                time.sleep(1)
-                base.click_on(app_window,base.click_coord["close"])
-                time.sleep(1)
-                base.click_on(app_window,base.click_coord["keep"])
-                time.sleep(1.5)
-                print("Captured Miscrit")
-                break
             elif 'close' in close.lower():
                 need_to_train = check_if_train_req(frame)
                 base.click_on(app_window,base.click_coord["close"])
